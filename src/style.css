@@ -1,0 +1,260 @@
+:root {
+  color-scheme: dark;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --accent-1: #3a7bfd;
+  --accent-2: #7c5cfc;
+  --accent-gradient: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  --record: #ff5d5d;
+  --bg: #14161a;
+  --surface: #1c1f26;
+  --surface-2: #262a33;
+  --text: #f2f2f2;
+  --text-dim: #9198a3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#app {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: max(1.5rem, env(safe-area-inset-top)) 1.5rem
+    max(1.5rem, env(safe-area-inset-bottom));
+  position: relative;
+  text-align: center;
+  background: radial-gradient(circle at 50% -10%, #232838 0%, var(--bg) 55%);
+}
+
+.screen h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.subtitle {
+  margin: -1rem 0 0;
+  color: var(--text-dim);
+}
+
+.app-logo {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 22%;
+  box-shadow: 0 8px 24px rgba(58, 123, 253, 0.35);
+}
+
+.tool-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 20rem;
+}
+
+.tool-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.tool-button:active {
+  background: var(--surface-2);
+  transform: scale(0.98);
+}
+
+.tool-icon {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+  background: var(--accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tool-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.tool-label {
+  flex: 1;
+}
+
+.tool-chevron {
+  color: var(--text-dim);
+  font-size: 1.2rem;
+}
+
+.duration-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 20rem;
+}
+
+.duration-button {
+  padding: 0.9rem 1.4rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.duration-button:active {
+  background: var(--surface-2);
+  transform: scale(0.96);
+}
+
+.back-button {
+  position: absolute;
+  top: max(1.25rem, env(safe-area-inset-top));
+  left: 1.25rem;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.recorder-screen {
+  gap: 1.25rem;
+}
+
+.phase-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin: 0;
+  min-height: 1.4rem;
+  transition: color 0.2s ease;
+}
+
+.phase-label.is-recording {
+  color: var(--record);
+}
+
+.phase-label.is-playing {
+  color: var(--accent-1);
+}
+
+.error-message {
+  color: var(--record);
+  max-width: 20rem;
+}
+
+.countdown-ring {
+  position: relative;
+  width: 11rem;
+  height: 11rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.countdown-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.countdown-track {
+  fill: none;
+  stroke: var(--surface-2);
+  stroke-width: 8;
+}
+
+.countdown-progress {
+  fill: none;
+  stroke: var(--text-dim);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.2s linear, stroke 0.2s ease;
+}
+
+.countdown-progress.is-recording {
+  stroke: var(--record);
+}
+
+.countdown-progress.is-playing {
+  stroke: var(--accent-1);
+}
+
+.countdown-number {
+  position: absolute;
+  font-size: 2.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.primary-button {
+  width: 100%;
+  max-width: 12rem;
+  padding: 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent-gradient);
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 8px 24px rgba(58, 123, 253, 0.35);
+  transition: transform 0.15s ease;
+}
+
+.primary-button:active {
+  transform: scale(0.97);
+}
+
+.primary-button.stop {
+  background: var(--record);
+  box-shadow: 0 8px 24px rgba(255, 93, 93, 0.35);
+}
