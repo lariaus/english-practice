@@ -2,9 +2,10 @@
 
 ## What this app is
 
-A small collection of self-practice "tools" for improving English pronunciation,
-starting with a single tool (see `pronunciation-self-monitor-spec.md` for its
-detailed spec) and designed to accommodate more tools later without rework.
+A small collection of self-practice "tools" for improving English pronunciation:
+**Recorder Loop** (see `pronunciation-self-monitor-spec.md`) and **Robot
+Shadowing** (see `robot-shadowing-spec.md`), designed to accommodate more
+tools later without rework.
 
 This doc covers the app shell: navigation structure, tech stack, and local
 development/testing workflow. Tool-specific behavior lives in its own doc file
@@ -13,13 +14,15 @@ development/testing workflow. Tool-specific behavior lives in its own doc file
 ## App Structure / Navigation
 
 - **Home screen**: a menu listing available tools (a simple list of
-  buttons/cards). For now this list has a single entry: **"Recorder Loop"**.
+  buttons/cards) — currently **"Recorder Loop"** and **"Robot Shadowing"**.
 - **Tool screen**: reached by tapping a tool on the home screen.
   - Has its own **Back** button to return to the home screen.
-  - The **Recorder Loop** tool screen first shows a duration picker — a row
-    of buttons for **10s / 15s / 30s / 60s / 90s** — before showing the
-    actual record/playback loop UI (see the tool's own spec doc for details
-    of that behavior).
+  - **Recorder Loop** first shows a duration picker — a row of buttons for
+    **5s / 10s / 15s / 30s / 60s / 90s** — before showing its loop UI.
+  - **Robot Shadowing** has no duration picker; instead it shows session
+    options (voice, phrase database/difficulty, repeat count, repeat model
+    toggle) before Start/Stop — its response window is derived per-phrase,
+    not user-chosen (see its own spec doc for details).
 - Routing between Home and tool screens: no full router library needed for
   now — a tiny reactive "current screen" value is enough given how few
   screens exist. Revisit only if the number of tools/screens grows a lot.

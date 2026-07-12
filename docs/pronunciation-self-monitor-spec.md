@@ -31,7 +31,7 @@ cycling record/playback hands-free.
 
 ### Modes
 
-Selectable segment duration: **10s / 15s / 30s / 60s / 90s** (record N
+Selectable segment duration: **5s / 10s / 15s / 30s / 60s / 90s** (record N
 seconds, then play back N seconds, repeat).
 
 ### Required behaviors

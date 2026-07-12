@@ -185,9 +185,94 @@ body {
   color: var(--accent-1);
 }
 
+.phase-label.is-speaking {
+  color: var(--accent-2);
+}
+
 .error-message {
   color: var(--record);
   max-width: 20rem;
+}
+
+.voice-select {
+  width: 100%;
+  max-width: 16rem;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.voice-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.repeat-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.repeat-label {
+  font-size: 0.95rem;
+  color: var(--text-dim);
+}
+
+.repeat-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.repeat-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.repeat-button.selected {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: #fff;
+}
+
+.repeat-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle-button {
+  padding: 0.7rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease;
+}
+
+.toggle-button.on {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: #fff;
+}
+
+.toggle-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .countdown-ring {

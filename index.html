@@ -6,6 +6,15 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
     />
+    <!--
+      Page-wide referrer suppression: Safari doesn't honor the per-element
+      `referrerPolicy` attribute for <audio> fetches (confirmed - it still
+      sent a full Referer despite that), but this older, more broadly
+      supported meta tag reliably controls it for all subresource requests.
+      Needed so the Robot Shadowing Google-TTS playback isn't 404'd by
+      Google's Referer-based hotlink protection.
+    -->
+    <meta name="referrer" content="no-referrer" />
     <title>English Practice</title>
 
     <meta name="theme-color" content="#3a7bfd" />

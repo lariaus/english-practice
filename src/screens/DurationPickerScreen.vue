@@ -2,7 +2,7 @@
   <main class="screen">
     <button class="back-button" @click="$emit('back')">&larr; Back</button>
 
-    <h1>Recorder Loop</h1>
+    <h1>{{ title }}</h1>
     <p class="subtitle">Choose a loop duration</p>
 
     <div class="duration-grid">
@@ -19,7 +19,10 @@
 </template>
 
 <script setup>
+defineProps({
+  title: { type: String, required: true },
+})
 defineEmits(['select-duration', 'back'])
 
-const durations = [10, 15, 30, 60, 90]
+const durations = [5, 10, 15, 30, 60, 90]
 </script>
