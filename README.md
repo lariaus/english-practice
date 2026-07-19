@@ -7,10 +7,21 @@ with "Recorder Loop", a hands-free record → playback self-monitoring loop.
 
 ## Test locally
 
+Run static server:
+
 ```sh
 npm install
 npm run build
 python3 -m http.server 8000 --directory dist
+```
+
+Run the companion server:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r native-exp-server/requirements.txt
+python3 native-exp-server/server.py
 ```
 
 Open `http://localhost:8000`.

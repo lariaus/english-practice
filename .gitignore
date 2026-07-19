@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Python (native-exp-server)
+.venv
+native-exp-server/__pycache__
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
