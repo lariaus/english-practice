@@ -266,6 +266,16 @@ export class MicRecorderEngine {
       this._audioCtx.close().catch(() => {})
       this._audioCtx = null
     }
+
+    // Reset the real, internal phase (not just whatever mirror a caller
+    // might keep) - otherwise a destroy() mid-session (e.g. a host
+    // abandoning an in-progress recording) leaves `this.phase` stuck at
+    // its last value forever, since nothing else in this class resets it.
+    // Every future start()/recordFor() call checks this exact field, so a
+    // stale non-idle/non-error value here silently no-ops every call after,
+    // with no error and no way to recover short of recreating the engine.
+    this.error = null
+    this._setPhase('idle')
   }
 
   _ensureAudioContext() {

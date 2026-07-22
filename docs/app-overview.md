@@ -3,18 +3,21 @@
 ## What this app is
 
 A small collection of self-practice "tools" for improving English pronunciation:
-**Recorder Loop** (see `pronunciation-self-monitor-spec.md`) and **Robot
-Shadowing** (see `robot-shadowing-spec.md`), designed to accommodate more
-tools later without rework.
+**Recorder Loop** (see `pronunciation-self-monitor-spec.md`), **Robot
+Shadowing** (see `robot-shadowing-spec.md`), and **YT Shadowing** (see
+`yt-shadowing-spec.md`), designed to accommodate more tools later without
+rework.
 
 This doc covers the app shell: navigation structure, tech stack, and local
 development/testing workflow. Tool-specific behavior lives in its own doc file
-(one per tool).
+(one per tool). Interaction patterns shared *across* tools (not owned by any
+one of them) live in `common-design-philosophy.md`.
 
 ## App Structure / Navigation
 
 - **Home screen**: a menu listing available tools (a simple list of
-  buttons/cards) — currently **"Recorder Loop"** and **"Robot Shadowing"**.
+  buttons/cards) — currently **"Recorder Loop"**, **"Robot Shadowing"**, and
+  **"YT Shadowing"**.
 - **Tool screen**: reached by tapping a tool on the home screen.
   - Has its own **Back** button to return to the home screen.
   - **Recorder Loop** first shows a duration picker — a row of buttons for
@@ -23,6 +26,9 @@ development/testing workflow. Tool-specific behavior lives in its own doc file
     options (voice, phrase database/difficulty, repeat count, repeat model
     toggle) before Start/Stop — its response window is derived per-phrase,
     not user-chosen (see its own spec doc for details).
+  - **YT Shadowing** first shows a URL-entry/history screen, then a second
+    screen with the video player and all controls — see its own spec doc
+    for details.
 - Routing between Home and tool screens: no full router library needed for
   now — a tiny reactive "current screen" value is enough given how few
   screens exist. Revisit only if the number of tools/screens grows a lot.

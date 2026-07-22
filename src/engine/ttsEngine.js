@@ -100,11 +100,12 @@ export class TTSEngine {
     }
   }
 
-  // Speaks `text` aloud. Resolves with the elapsed speaking time in
-  // seconds once done (or on error), never rejects.
-  speak(text) {
-    if (this._parsed.type === 'google-tts-api') return this._speakGoogleTts(text)
-    return this._speakDefaultEngine(text)
+  // Speaks `text` aloud, at the given playback rate (1 = normal). Resolves
+  // with the elapsed speaking time in seconds once done (or on error),
+  // never rejects.
+  speak(text, rate = 1) {
+    if (this._parsed.type === 'google-tts-api') return this._speakGoogleTts(text, rate)
+    return this._speakDefaultEngine(text, rate)
   }
 
   stop() {
@@ -128,11 +129,12 @@ export class TTSEngine {
     if (resolve) resolve(1)
   }
 
-  _speakDefaultEngine(text) {
+  _speakDefaultEngine(text, rate = 1) {
     return new Promise((resolve) => {
       const voice = this._parsed.voiceName ? findBrowserVoice(this._parsed.voiceName) : null
       const utterance = new SpeechSynthesisUtterance(text)
       if (voice) utterance.voice = voice
+      utterance.rate = rate
 
       this._activeUtterance = utterance
       this._activeResolve = resolve
@@ -163,7 +165,7 @@ export class TTSEngine {
   // new Audio() per phrase, since a fresh element deep in the async loop
   // is exactly what got silently autoplay-blocked once before in this app
   // (see recorderLoopEngine's playback fix).
-  _speakGoogleTts(text) {
+  _speakGoogleTts(text, rate = 1) {
     return new Promise((resolve) => {
       if (!this._audioEl) {
         resolve(1)
@@ -171,6 +173,7 @@ export class TTSEngine {
       }
 
       this._activeResolve = resolve
+      this._audioEl.playbackRate = rate
       const startedAt = Date.now()
 
       const finish = () => {

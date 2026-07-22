@@ -11,12 +11,32 @@
           <span v-if="info?.usPhonetics" class="word-info-header-phonetic">{{ info.usPhonetics.text }}</span>
           <button
             class="word-info-play-button word-info-word-play-button"
-            @click="playWordPronunciation(currentWord)"
+            @pointerdown="playGesture.handlePointerDown()"
+            @pointerup="playGesture.handlePointerUp"
+            @pointercancel="playGesture.handlePointerCancel"
+            @click="handlePlayWordClick"
             aria-label="Play word"
           >
-            ▶
+            <PlayPauseIcon />
           </button>
+
+          <RecordShadowButtons
+            compact
+            :record-label="recordLabel"
+            :record-active="recordSessionActive && micState.phase === 'recording'"
+            :record-disabled="isShadowing"
+            :shadow-label="shadowLabel"
+            :shadow-active="isShadowing"
+            :shadow-disabled="recordSessionActive"
+            @toggle-record="toggleRecording()"
+            @shadow-click="handleShadowClick"
+            @shadow-pointerdown="handleShadowPointerDown"
+            @shadow-pointerup="handleShadowPointerUp"
+            @shadow-pointercancel="handleShadowPointerCancel"
+          />
         </div>
+
+        <p v-if="micState.error" class="error-message word-info-mic-error">{{ micState.error }}</p>
 
         <template v-if="info">
           <div class="word-info-phonetics" v-if="info.phonetics.length">
@@ -26,10 +46,13 @@
               <button
                 v-if="p.audio"
                 class="word-info-play-button"
-                @click="playAudioUrl(p.audio)"
+                @pointerdown="playGesture.handlePointerDown()"
+                @pointerup="playGesture.handlePointerUp"
+                @pointercancel="playGesture.handlePointerCancel"
+                @click="handlePlayPhoneticClick($event, p.audio)"
                 aria-label="Play pronunciation"
               >
-                ▶
+                <PlayPauseIcon />
               </button>
             </div>
           </div>
@@ -56,8 +79,8 @@
         <p v-else-if="error" class="word-info-status">{{ error }}</p>
 
         <div class="word-info-external-links">
-          <button class="word-info-external-link" @click="openReferenceSite('cambridge')">Ca</button>
-          <button class="word-info-external-link" @click="openReferenceSite('wordreference')">Wr</button>
+          <button class="word-info-external-link" @click="openReferenceSite('cambridge', currentWord)">Ca</button>
+          <button class="word-info-external-link" @click="openReferenceSite('wordreference', currentWord)">Wr</button>
         </div>
       </template>
     </div>
@@ -67,13 +90,87 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { fetchWordInfo } from '../engine/dictionaryClient.js'
-import { playAudioUrl, playWordPronunciation } from '../engine/wordAudioPlayer.js'
+import { playAudioUrl, playWordPronunciation, playWordPronunciationTimed } from '../engine/wordAudioPlayer.js'
+import { openReferenceSite } from '../engine/externalDictionarySites.js'
+import { useRecordShadow } from '../composables/useRecordShadow.js'
+import { useShiftOrLongPress } from '../composables/useShiftOrLongPress.js'
+import RecordShadowButtons from './RecordShadowButtons.vue'
+import PlayPauseIcon from './PlayPauseIcon.vue'
 
 const visible = ref(false)
 const loading = ref(false)
 const error = ref(null)
 const info = ref(null)
 const currentWord = ref('')
+
+// Shift-click/long-press on any play button here plays that clip at 0.5x
+// instead of normal speed - one-shot, no "restore afterward" needed like
+// the video's Play/Pause has, since a word clip has no persistent state to
+// revert. One shared gesture tracker for every play button in this popup -
+// only one can be physically pressed at a time.
+const playGesture = useShiftOrLongPress()
+
+function handlePlayWordClick(event) {
+  playWordPronunciation(currentWord.value, 'en', playGesture.consume(event) ? 0.5 : 1)
+}
+
+function handlePlayPhoneticClick(event, audioUrl) {
+  playAudioUrl(audioUrl, playGesture.consume(event) ? 0.5 : 1)
+}
+
+const {
+  micState,
+  micEngine,
+  recordSessionActive,
+  isShadowing,
+  recordLabel,
+  shadowLabel,
+  toggleRecording,
+  consumeWantsDouble,
+  handleShadowPointerDown,
+  handleShadowPointerUp,
+  handleShadowPointerCancel,
+  destroy: destroyRecordShadow,
+} = useRecordShadow()
+
+// Set on hide(), cleared on show() - lets an in-flight Shadow pass notice
+// the popup closed and stop advancing, even mid-await (e.g. still playing
+// the word's own clip, before recordFor() would even start) - destroying
+// the mic engine alone doesn't prevent a *not-yet-started* recordFor() from
+// quietly kicking off a fresh recording after the popup is already gone.
+let popupClosed = false
+
+// One play-word / record / listen-to-yourself pass - the word's own clip is
+// played up front (unlike YT Shadowing's video segment, its length is known
+// as soon as it's played), and that same elapsed length + 0.25s becomes the
+// recording window, so there's no separate "how long should I record"
+// guess to make.
+async function runWordShadowPass() {
+  const elapsedSeconds = await playWordPronunciationTimed(currentWord.value)
+  if (popupClosed) return
+  const blob = await micEngine.recordFor(elapsedSeconds + 0.25)
+  if (popupClosed) return
+  if (blob) await micEngine.playBlob(blob)
+}
+
+// Shift-click/Shift+long-press requests a second pass immediately after the
+// first, back-to-back - only read on the press that starts a fresh session,
+// same convention as YT Shadowing's outside-capture Shadow.
+async function handleShadowClick(event) {
+  if (micState.phase === 'recording') {
+    micEngine.stop()
+    return
+  }
+  if (isShadowing.value) return
+
+  if (micState.phase === 'idle' || micState.phase === 'error') {
+    const wantsDouble = consumeWantsDouble(event)
+    isShadowing.value = true
+    await runWordShadowPass()
+    if (!popupClosed && wantsDouble) await runWordShadowPass()
+    if (!popupClosed) isShadowing.value = false
+  }
+}
 
 function handleKeydown(event) {
   if (event.key === 'Escape' && visible.value) hide()
@@ -88,6 +185,7 @@ onBeforeUnmount(() => {
 })
 
 async function show(word, { playWordOnOpen = false } = {}) {
+  popupClosed = false
   visible.value = true
   loading.value = true
   error.value = null
@@ -109,30 +207,16 @@ async function show(word, { playWordOnOpen = false } = {}) {
   info.value = result
 }
 
+// Stops and resets any in-progress Record/Shadow session (mic recording,
+// beeps, playback) immediately - closing the popup shouldn't leave any of
+// that running invisibly in the background.
 function hide() {
   visible.value = false
+  popupClosed = true
+  destroyRecordShadow()
 }
 
-const REFERENCE_SITES = {
-  cambridge: (word) => `https://dictionary.cambridge.org/dictionary/english/${encodeURIComponent(word)}`,
-  wordreference: (word) => `https://www.wordreference.com/definition/${encodeURIComponent(word)}`,
-}
-
-function openCenteredWindow(url) {
-  const width = 700
-  const height = 800
-  const left = window.screenX + (window.outerWidth - width) / 2
-  const top = window.screenY + (window.outerHeight - height) / 2
-  window.open(url, '_blank', `width=${width},height=${height},left=${left},top=${top}`)
-}
-
-function openReferenceSite(siteId) {
-  const buildUrl = REFERENCE_SITES[siteId]
-  if (!buildUrl || !currentWord.value) return
-  openCenteredWindow(buildUrl(currentWord.value))
-}
-
-defineExpose({ show, hide })
+defineExpose({ show, hide, visible })
 </script>
 
 <style scoped>
@@ -184,9 +268,15 @@ defineExpose({ show, hide })
 
 .word-info-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.6rem;
   margin: 0 2.5rem 0.25rem 0;
+}
+
+.word-info-mic-error {
+  margin: 0 0 0.75rem;
+  max-width: none;
 }
 
 .word-info-word {
@@ -204,6 +294,11 @@ defineExpose({ show, hide })
   width: 2rem;
   height: 2rem;
   font-size: 0.8rem;
+}
+
+.word-info-word-play-button :deep(svg) {
+  width: 0.85rem;
+  height: 0.85rem;
 }
 
 .word-info-phonetics {
@@ -241,6 +336,9 @@ defineExpose({ show, hide })
   width: 1.6rem;
   height: 1.6rem;
   margin-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: 50%;
   background: var(--surface-2);
@@ -249,6 +347,11 @@ defineExpose({ show, hide })
   line-height: 1;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+.word-info-play-button :deep(svg) {
+  width: 0.7rem;
+  height: 0.7rem;
 }
 
 .word-info-play-button:active {
