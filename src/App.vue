@@ -1,5 +1,11 @@
 <template>
-  <HomeScreen v-if="screen.name === 'home'" @select-tool="onSelectTool" />
+  <HomeScreen
+    v-if="screen.name === 'home'"
+    @select-tool="onSelectTool"
+    @open-settings="goToSettings"
+  />
+
+  <SettingsScreen v-else-if="screen.name === 'settings'" @back="goHome" />
 
   <DurationPickerScreen
     v-else-if="screen.name === 'recorder-loop-duration'"
@@ -36,6 +42,7 @@
 <script setup>
 import { ref } from 'vue'
 import HomeScreen from './screens/HomeScreen.vue'
+import SettingsScreen from './screens/SettingsScreen.vue'
 import DurationPickerScreen from './screens/DurationPickerScreen.vue'
 import RecorderLoopSessionScreen from './screens/RecorderLoopSessionScreen.vue'
 import RobotShadowingSessionScreen from './screens/RobotShadowingSessionScreen.vue'
@@ -64,6 +71,10 @@ function onLoadYtVideo({ videoId, url }) {
 
 function goHome() {
   screen.value = { name: 'home' }
+}
+
+function goToSettings() {
+  screen.value = { name: 'settings' }
 }
 
 function goToRecorderDurationPicker() {

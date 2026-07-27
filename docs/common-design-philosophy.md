@@ -115,6 +115,36 @@ the first time around:
   step that hasn't started yet (e.g. still mid-playback before a recording
   would even begin).
 
+## Online shared storage
+
+Some data is small, changes over time, and is worth keeping in sync across
+devices - a short list, a handful of settings, "where you left off." For
+that specific shape of data, a small Cloudflare Worker + KV backend (see
+`cloudflare-worker/`) gives it one shared home every device reads and
+writes the same copy of, instead of each device quietly keeping its own
+local copy that never agrees with the others.
+
+- **What it's for**: small-ish, frequently-changing, worth-keeping data that
+  should look the same everywhere you use the app.
+- **What it's not for**: anything sizeable (real files, large collections)
+  or essentially static (rarely changes, or is fine being device-specific) -
+  that belongs in proper server-side storage, or in local/on-device
+  storage, not here. This is a thin sync layer for small state, not a
+  general-purpose database.
+- **Access model**: no interactive sign-in (see `docs/setup-cloudflare.md`
+  for the reasoning) - a Worker URL, entered manually per device via a
+  settings screen and kept in `localStorage`, is the only thing gating
+  access. Deliberately not an OAuth flow, since the whole point is
+  instant, friction-free use across your own devices, not securing
+  something sensitive.
+- Reads/writes go through the Worker acting as a thin API in front of KV (a
+  plain key-value store) - the client never talks to KV directly.
+- **Best-effort by design**, same convention as `nativeExpServerClient.js`:
+  every read/write function degrades to doing nothing (an empty or
+  unchanged result) rather than throwing if no server is configured yet or
+  the request fails. This kind of sync should never be required for a
+  feature to work, only something that improves it when available.
+
 ## File map
 
 - `src/composables/useShiftOrLongPress.js`
@@ -125,3 +155,6 @@ the first time around:
 - `src/engine/externalDictionarySites.js`
 - `src/components/WordInfoPopup.vue` and `src/screens/YtShadowingPlayerScreen.vue`
   (the two current consumers of all of the above)
+- `cloudflare-worker/` (the Worker + KV backend), `src/engine/syncConfig.js`
+  (the shared Worker-URL setting), `src/screens/SettingsScreen.vue` (where
+  it's entered) - see `docs/setup-cloudflare.md` for setup

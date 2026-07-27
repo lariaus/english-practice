@@ -231,9 +231,37 @@ once the clip finishes (used by Shadow above).
 
 ## History
 
-The last 5 distinct videos watched (title + URL) show on the form screen,
-persisted in `localStorage`; re-watching a video moves it to the top
-instead of duplicating it.
+The last 5 distinct videos watched show on the form screen, each rendered
+as a single (wrapping) line: `Title - Author (duration) (progress%)`.
+Title is truncated to 50 characters + `...` before anything else is
+appended, so a long title can never crowd the trailing info off the line;
+author and duration only appear once known, and progress only once it's at
+least 1% (a barely-started entry doesn't show a noisy "(0%)").
+
+Backed by a small Cloudflare Worker + KV store (see
+`docs/cross-device-sync.md` for the full pipeline, `docs/setup-cloudflare.md`
+for setup commands) instead of `localStorage` - the same list is shared
+across every device once a sync server URL is set in Settings (reachable
+from the Home screen, not owned by this tool specifically). Best-effort
+only, same convention as NativeExpServer: with no URL configured (the
+default), history silently does nothing - never required for the rest of
+the tool to work.
+
+- **Starting a video** (a history click, or pasting the same URL again)
+  sends title/author/current duration to the Worker, moving that entry to
+  the front (deduped by video ID, trimmed to 5) - any previously-recorded
+  watch position is left untouched by this write.
+- **Ending a session** - the in-app Back button, or the page actually
+  closing/reloading/backgrounding - sends the real current position,
+  updating just that field. The page-closing case uses
+  `navigator.sendBeacon` (a normal `fetch` gets cancelled mid-unload), fired
+  from both a `pagehide` listener (real navigation away) and a
+  `visibilitychange` listener going hidden (backgrounding - the only signal
+  iOS Safari reliably gives before it may suspend/kill the tab outright).
+- **Starting a video again**, if a saved position ≥ 5 seconds exists for it
+  in the current top-5, playback silently seeks there once the player is
+  ready - no prompt, and it doesn't matter whether the video was reopened
+  from history or a freshly pasted URL.
 
 ## Architecture fit
 
@@ -243,7 +271,10 @@ instead of duplicating it.
   `dictionaryClient.js` (fetch+cache word info), `wordAudioPlayer.js`
   (pronunciation fallback chain), `externalDictionarySites.js`
   (centered-window openers), `nativeExpServerClient.js` (talks to the
-  companion server), `ytHistory.js` (localStorage history).
+  companion server), `ytHistory.js` (talks to the Cloudflare Worker sync
+  backend - see "History" above and `docs/cross-device-sync.md`; reads the
+  configured server URL via `syncConfig.js`, an app-wide setting owned by
+  `SettingsScreen.vue`, not by this tool).
 - Composables: `useRecordShadow.js` - the Record/Shadow mic-engine plumbing
   (toggle, R/S/L + S/R/L/P labels, shift/long-press double-pass detection)
   shared by every Record+Shadow pair in the app. What one Shadow *pass*

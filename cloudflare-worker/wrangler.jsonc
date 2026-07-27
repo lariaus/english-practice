@@ -1,0 +1,7 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "english-practice-sync",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-27",
+  "kv_namespaces": [{ "binding": "HISTORY", "id": "6d69e7a0aa6649b1af9bc36de71f53ad" }]
+}

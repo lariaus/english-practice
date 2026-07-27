@@ -3,9 +3,11 @@
     <!-- inert while the word popup is open - nothing behind it (clicks,
          keyboard focus/activation) should be reachable until it closes. -->
     <div class="screen-content" :inert="isWordPopupOpen || null">
-      <button class="back-button" @click="handleBack">&larr; Back</button>
-
-      <h1>YT Shadowing</h1>
+      <div class="screen-header">
+        <button class="back-button" @click="handleBack">&larr; Back</button>
+        <h1>YT Shadowing</h1>
+        <span class="screen-header-spacer"></span>
+      </div>
 
       <p v-if="state.error" class="error-message">{{ state.error }}</p>
 
@@ -337,7 +339,7 @@ import {
   SEEK_STEP_SECONDS,
   YtShadowingEngine,
 } from '../engine/ytShadowingEngine.js'
-import { addToHistory } from '../engine/ytHistory.js'
+import { addToHistory, loadHistory, sendHistoryBeacon } from '../engine/ytHistory.js'
 import { fetchSubtitles, isNativeExpServerAvailable } from '../engine/nativeExpServerClient.js'
 import { openReferenceSite } from '../engine/externalDictionarySites.js'
 import { useRecordShadow } from '../composables/useRecordShadow.js'
@@ -360,6 +362,7 @@ const state = reactive({
   isPlaying: false,
   playbackRate: 1,
   videoTitle: null,
+  videoAuthor: null,
 })
 
 const engine = new YtShadowingEngine({
@@ -1066,14 +1069,65 @@ function formatTime(totalSeconds) {
   return `${minutes}:${seconds.toFixed(1).padStart(4, '0')}`
 }
 
-// Records the video into history once its title becomes available
-// (arrives asynchronously, after the player actually starts).
+// Records the video into history once its title becomes available (arrives
+// asynchronously, after the player actually starts) - author/duration go
+// along with it. currentPosition is deliberately omitted here (see
+// ytHistory.js and the Worker's own merge logic) so a fresh start never
+// clobbers whatever position a previous session already recorded for this
+// video - only the exit-time writes below ever set a real value for it.
+let historyEntryStarted = false
 watch(
   () => state.videoTitle,
   (title) => {
-    if (title) addToHistory(props.videoId, props.url, title)
+    if (!title) return
+    historyEntryStarted = true
+    addToHistory({
+      videoId: props.videoId,
+      url: props.url,
+      title,
+      author: state.videoAuthor,
+      duration: engine.getDuration(),
+    })
   },
 )
+
+// Shared by every "this watch session is ending" path below.
+function buildHistoryExitEntry() {
+  return {
+    videoId: props.videoId,
+    url: props.url,
+    title: state.videoTitle,
+    author: state.videoAuthor,
+    duration: engine.getDuration(),
+    currentPosition: engine.getCurrentTime(),
+  }
+}
+
+// In-app Back: the page itself stays alive (this is just a Vue screen
+// swap, not a real navigation), so a normal fetch (via addToHistory) is
+// fine - fire-and-forget, nothing to wait for before leaving the screen.
+function saveHistoryPositionOnBack() {
+  if (!historyEntryStarted) return
+  addToHistory(buildHistoryExitEntry())
+}
+
+// The page actually closing/reloading/backgrounding: a normal fetch() gets
+// cancelled mid-flight once unload starts, so this goes through
+// sendHistoryBeacon instead (see ytHistory.js). Listens to both `pagehide`
+// (real navigation away/close/reload) and `visibilitychange` (backgrounding -
+// often the *only* signal iOS Safari gives before it may suspend or kill the
+// tab outright without ever firing pagehide). Each call is idempotent (just
+// re-saves the current position), so firing more than once across a session
+// - e.g. backgrounding and resuming a few times before actually closing - is
+// harmless, just an extra up-to-date save.
+function saveHistoryPositionOnPageExit() {
+  if (!historyEntryStarted) return
+  sendHistoryBeacon(buildHistoryExitEntry())
+}
+
+function handleVisibilityChange() {
+  if (document.visibilityState === 'hidden') saveHistoryPositionOnPageExit()
+}
 
 // The bar is split 50/50 around 1.0 so the "normal speed" point always sits
 // dead-center, even though 0.5-1.0 and 1.0-2.0 are different-sized ranges.
@@ -1430,17 +1484,38 @@ function handleKeyup(event) {
   }
 }
 
-onMounted(() => {
+// Not just for History-list clicks - applies any time this videoId loads,
+// including pasting the same URL again manually, since the player doesn't
+// need to know how it got here, just whether a saved position exists for
+// this video. Ignores anything under RESUME_MIN_POSITION_SECONDS so it
+// doesn't awkwardly jump a few seconds in for a video you'd basically just
+// started last time.
+const RESUME_MIN_POSITION_SECONDS = 5
+
+async function resumeFromSavedPositionIfAny() {
+  const history = await loadHistory()
+  const savedPosition = history.find((entry) => entry.videoId === props.videoId)?.currentPosition
+  if (typeof savedPosition === 'number' && savedPosition >= RESUME_MIN_POSITION_SECONDS) {
+    engine.seekTo(savedPosition)
+  }
+}
+
+onMounted(async () => {
   window.addEventListener('keydown', handleKeydown)
   window.addEventListener('keyup', handleKeyup)
   document.addEventListener('selectionchange', handleSelectionChange)
-  engine.loadVideo('yt-shadowing-player', props.videoId)
+  window.addEventListener('pagehide', saveHistoryPositionOnPageExit)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  await engine.loadVideo('yt-shadowing-player', props.videoId)
+  await resumeFromSavedPositionIfAny()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('keyup', handleKeyup)
   document.removeEventListener('selectionchange', handleSelectionChange)
+  window.removeEventListener('pagehide', saveHistoryPositionOnPageExit)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
   if (playbackPollInterval) clearInterval(playbackPollInterval)
   document.removeEventListener('click', handleSpeedPopoverOutsideClick, true)
   shadowLoopAborted = true
@@ -1451,6 +1526,7 @@ onBeforeUnmount(() => {
 })
 
 function handleBack() {
+  saveHistoryPositionOnBack()
   shadowLoopAborted = true
   engine.destroy()
   micEngine.destroy()
@@ -1470,6 +1546,34 @@ function handleBack() {
   align-items: center;
   gap: 1.5rem;
   width: 100%;
+}
+
+/* Puts the back button on the same row as the title instead of the shared
+   .back-button's normal floating-above-everything corner position (see
+   style.css) - overridden only here, scoped to this screen, so every other
+   screen keeps that original layout untouched. Same 1fr/auto/1fr trick as
+   .video-bar-row below: the title stays visually centered regardless of the
+   back button's width, balanced by the empty spacer on the other side. */
+.screen-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.screen-header .back-button {
+  position: static;
+  justify-self: start;
+  padding: 0.5rem;
+}
+
+.screen-header h1 {
+  justify-self: center;
+}
+
+.screen-header-spacer {
+  justify-self: end;
 }
 
 .player-and-transcript {
@@ -1504,6 +1608,27 @@ function handleBack() {
   max-width: 24rem;
 }
 
+/* Laptop-only (mobile never reaches 700px, so it's untouched): the video
+   column grows to absorb whatever's left in the row - shares it with the
+   fixed-width transcript column when CC is on, or takes the whole row when
+   CC is off, with no separate rule needed for either case. Capped by
+   whichever is smaller of a vh-derived width (so it never pushes the
+   controls/transcript below the fold on a short laptop screen) or a flat
+   rem ceiling (so it doesn't keep growing past a laptop-appropriate size on
+   a huge external monitor). */
+@media (min-width: 700px) {
+  .video-column {
+    flex: 1 1 0;
+    min-width: 24rem;
+    max-width: min(calc(64vh * 16 / 9), 64rem);
+  }
+
+  .video-frame {
+    min-width: 24rem;
+    max-width: min(calc(64vh * 16 / 9), 64rem);
+  }
+}
+
 .yt-player-wrap {
   position: relative;
   width: 100%;
@@ -1523,6 +1648,10 @@ function handleBack() {
 @media (min-width: 700px) {
   .subtitle-panel {
     max-width: 22rem;
+    /* Explicit, not just relying on flex's initial value - the video column
+       next to it now grows via flex-grow, so it's worth being clear here
+       that the transcript deliberately doesn't. */
+    flex: 0 0 auto;
   }
 }
 

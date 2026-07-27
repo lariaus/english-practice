@@ -76,6 +76,7 @@ export class YtShadowingEngine {
     this.isPlaying = false
     this.playbackRate = 1
     this.videoTitle = null
+    this.videoAuthor = null
     this._player = null
     this._loopRange = null
     this._loopInterval = null
@@ -86,6 +87,7 @@ export class YtShadowingEngine {
   async loadVideo(elementId, videoId) {
     this.error = null
     this.videoTitle = null
+    this.videoAuthor = null
     this._setPhase('loading')
 
     let YT
@@ -136,6 +138,11 @@ export class YtShadowingEngine {
             if (!this.videoTitle) {
               const data = this._player.getVideoData ? this._player.getVideoData() : null
               if (data?.title) this.videoTitle = data.title
+              // getVideoData().author is undocumented/unofficial (Google has
+              // never listed it in the official IFrame API reference) - it
+              // reliably returns the channel name today, but isn't a
+              // guaranteed contract and could stop working without notice.
+              if (data?.author) this.videoAuthor = data.author
             }
             this._emit()
           },
@@ -292,6 +299,7 @@ export class YtShadowingEngine {
       isPlaying: this.isPlaying,
       playbackRate: this.playbackRate,
       videoTitle: this.videoTitle,
+      videoAuthor: this.videoAuthor,
     })
   }
 }

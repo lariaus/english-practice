@@ -6,13 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "worker:dev": "wrangler dev --config cloudflare-worker/wrangler.jsonc",
+    "worker:deploy": "wrangler deploy --config cloudflare-worker/wrangler.jsonc"
   },
   "dependencies": {
     "vue": "^3.4.21"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
-    "vite": "^5.2.8"
+    "vite": "^5.2.8",
+    "wrangler": "^4.114.0"
   }
 }
