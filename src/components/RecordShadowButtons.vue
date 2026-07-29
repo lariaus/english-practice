@@ -3,7 +3,10 @@
     class="record-button"
     :class="{ recording: recordActive, compact }"
     :disabled="recordDisabled"
-    @click="$emit('toggle-record')"
+    @pointerdown="$emit('record-pointerdown', $event)"
+    @pointerup="$emit('record-pointerup', $event)"
+    @pointercancel="$emit('record-pointercancel', $event)"
+    @click="$emit('toggle-record', $event)"
   >
     <span class="record-icon">
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -51,6 +54,9 @@ defineProps({
 
 defineEmits([
   'toggle-record',
+  'record-pointerdown',
+  'record-pointerup',
+  'record-pointercancel',
   'shadow-click',
   'shadow-pointerdown',
   'shadow-pointerup',

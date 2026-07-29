@@ -2,7 +2,7 @@
   <main class="screen yt-player-screen">
     <!-- inert while the word popup is open - nothing behind it (clicks,
          keyboard focus/activation) should be reachable until it closes. -->
-    <div class="screen-content" :inert="isWordPopupOpen || null">
+    <div class="screen-content" :inert="isDictionaryOpen || null">
       <div class="screen-header">
         <button class="back-button" @click="handleBack">&larr; Back</button>
         <h1>YT Shadowing</h1>
@@ -126,6 +126,9 @@
                 :shadow-active="isShadowing"
                 :shadow-disabled="shadowButtonDisabled"
                 @toggle-record="handleToggleRecording"
+                @record-pointerdown="handleRecordPointerDown"
+                @record-pointerup="handleRecordPointerUp"
+                @record-pointercancel="handleRecordPointerCancel"
                 @shadow-click="handleShadow"
                 @shadow-pointerdown="handleShadowPointerDown"
                 @shadow-pointerup="handleShadowPointerUp"
@@ -313,8 +316,6 @@
     </div>
     </div>
 
-    <WordInfoPopup ref="wordInfoPopup" />
-
     <!-- EXPERIMENTAL Hands-Free Record overlay - see script section. No
          visual content by design (not even a background change beyond the
          static scrim) - a plain tap advances handsFreePhase, a long-press
@@ -345,16 +346,16 @@ import { openReferenceSite } from '../engine/externalDictionarySites.js'
 import { useRecordShadow } from '../composables/useRecordShadow.js'
 import { useShiftOrLongPress } from '../composables/useShiftOrLongPress.js'
 import { MicRecorderEngine } from '../engine/micRecorderEngine.js'
-import WordInfoPopup from '../components/WordInfoPopup.vue'
 import RecordShadowButtons from '../components/RecordShadowButtons.vue'
 import PlayPauseIcon from '../components/PlayPauseIcon.vue'
 
 const props = defineProps({
   videoId: { type: String, required: true },
   url: { type: String, required: true },
+  dictionaryOpen: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['back'])
+const emit = defineEmits(['back', 'show-word'])
 
 const state = reactive({
   phase: 'idle',
@@ -413,6 +414,9 @@ const {
   handleShadowPointerDown,
   handleShadowPointerUp,
   handleShadowPointerCancel,
+  handleRecordPointerDown,
+  handleRecordPointerUp,
+  handleRecordPointerCancel,
 } = useRecordShadow()
 
 const PLAYBACK_POLL_MS = 100
@@ -627,12 +631,13 @@ function handleCaptureFromSelection() {
   enterCaptureLoop(range)
 }
 
-const wordInfoPopup = ref(null)
-
-// Drives the `inert` binding on .screen-content and the keydown guard
-// below - everything behind the popup (clicks, focus, shortcuts) must be
-// unreachable while it's open.
-const isWordPopupOpen = computed(() => !!wordInfoPopup.value?.visible)
+// The dictionary popup is now a single global instance owned by App.vue
+// (see docs/dictionary-spec.md) rather than living inside this screen -
+// `dictionaryOpen` is just relayed down from there. Drives the `inert`
+// binding on .screen-content and the keydown guard below - everything
+// behind the popup (clicks, focus, shortcuts) must be unreachable while
+// it's open, same as before, just sourced globally instead of locally.
+const isDictionaryOpen = computed(() => props.dictionaryOpen)
 
 // Splits a cue's text into alternating word/whitespace-and-punctuation
 // tokens, keeping every token (including separators) so the line can be
@@ -658,7 +663,7 @@ function handleWordClick(token, event) {
   }
 
   engine.pause()
-  wordInfoPopup.value?.show(cleaned, { playWordOnOpen: true })
+  emit('show-word', cleaned)
 }
 
 async function loadSubtitlesIfAvailable() {
@@ -721,8 +726,9 @@ let rehearVideoSecondsBack = 0
 let manualShadowDoubleMode = false
 let manualShadowInSecondLoop = false
 
-function handleToggleRecording() {
+function handleToggleRecording(event) {
   toggleRecordingShared(
+    event,
     () => {
       wasPlayingBeforeRecord = state.isPlaying
       engine.pause()
@@ -1404,9 +1410,9 @@ function isTypingTarget(target) {
 function handleKeydown(event) {
   if (isTypingTarget(event.target)) return
 
-  // While the word popup is open, none of this screen's shortcuts should
+  // While the dictionary is open, none of this screen's shortcuts should
   // fire - it has its own separate Escape-to-close handler.
-  if (isWordPopupOpen.value) return
+  if (isDictionaryOpen.value) return
 
   // EXPERIMENTAL Hands-Free mode - see above. Locks out every shortcut
   // while active, same as it locks out nearly every button.
@@ -1469,12 +1475,12 @@ function handleKeydown(event) {
     return
   }
 
-  // 'r' mirrors the Record button: a plain press toggles start/stop. No
-  // shift variant anymore - see toggleManualShadow for that flow, now on
-  // Shadow instead.
+  // 'r' mirrors the Record button: a plain press toggles start/stop.
+  // Shift+R mirrors shift-clicking it (see handleToggleRecording) - only
+  // read on the press that starts a fresh recording, same as Shift+S.
   if (event.key.toLowerCase() === 'r') {
     if (event.repeat) return
-    handleToggleRecording()
+    handleToggleRecording(event)
   }
 }
 

@@ -85,12 +85,36 @@
           <span class="tool-chevron">›</span>
         </button>
       </li>
+      <li>
+        <!-- Doesn't navigate anywhere - opens the dictionary as a popup
+             overlay on top of this same screen (see docs/dictionary-spec.md),
+             unlike the three tools above which switch to a whole new
+             screen. Same look/row as the others otherwise. -->
+        <button
+          class="tool-button"
+          @click="$emit('open-dictionary')"
+        >
+          <span class="tool-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M12 6c-1.5-1.3-3.5-2-6-2v13c2.5 0 4.5.7 6 2 1.5-1.3 3.5-2 6-2V4c-2.5 0-4.5.7-6 2z"
+                stroke="white"
+                stroke-width="2"
+                stroke-linejoin="round"
+              />
+              <path d="M12 6v13" stroke="white" stroke-width="2" />
+            </svg>
+          </span>
+          <span class="tool-label">Dictionary</span>
+          <span class="tool-chevron">›</span>
+        </button>
+      </li>
     </ul>
   </main>
 </template>
 
 <script setup>
-defineEmits(['select-tool', 'open-settings'])
+defineEmits(['select-tool', 'open-settings', 'open-dictionary'])
 
 const logoBase = import.meta.env.BASE_URL
 </script>

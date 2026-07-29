@@ -48,8 +48,8 @@ the last 5 videos from history) → **`YtShadowingPlayerScreen.vue`**
     divider - the line is what separates "video playback controls" from
     "practice tools," not a color change. All four use the same `compact`
     sizing (smaller padding/font/icon, no stretch) that `RecordShadowButtons.vue`
-    already had for the word popup - reused here rather than inventing a new
-    size tier.
+    already had for the dictionary popup - reused here rather than inventing
+    a new size tier.
 - Keyboard: Space (play/pause), ←/→ (seek ±5s), Shift+←/→ (speed ±0.05).
 - A segment "loop" primitive (seek to start, play, poll `getCurrentTime()`
   since the IFrame API has no native "stop at time X" event, jump back to
@@ -98,7 +98,16 @@ to short state codes rather than full words:
   your voice, click again to stop, which auto-plays your recording back
   immediately. Label reflects `micState.phase` while a Record-owned session
   is active: `R` idle, `S` (speak) while recording, `L` (listen) while your
-  recording plays back. Nothing more.
+  recording plays back.
+  - **Double record**: shift-click, Shift+`R`, or a long-press (touch) on
+    the press that *starts* a fresh recording requests a second pass - only
+    that first press is checked, same convention as Shadow's double-pass.
+    Pass 1 behaves exactly like a normal single recording (record, stop,
+    auto-playback, no beep). Once that playback finishes, one beep plays and
+    a second recording starts automatically (no button press needed); a
+    press stops it manually, same as pass 1, and it auto-plays back the same
+    way. Applies everywhere Record appears (this screen and the dictionary
+    popup) via a shared, on-by-default option in `useRecordShadow.js`.
 - **Shadow** - icon is two overlapping person silhouettes (a solid figure in
   front, a fainter offset one behind it in the record-red color, standing in
   for "shadow"). Label is always one of `S`/`R`/`L`/`P` (idle / recording /
@@ -177,57 +186,28 @@ Subtitles are fetched through **NativeExpServer** (see its own section
 below) - entirely optional; if it's not running, the CC button just does
 nothing visible.
 
-## Dictionary lookup popup
+## Dictionary lookup
 
-Clicking a transcript word pauses the video and opens `WordInfoPopup.vue`,
-showing:
+Clicking a transcript word pauses the video and opens the dictionary popup
+(`DictionaryPopup.vue`) for that word specifically (no search bar - see
+`docs/dictionary-spec.md` for the popup's full behavior, its search mode,
+and the app-wide keyboard shortcut, none of which are YT-Shadowing-specific
+now that it's a single global instance owned by `App.vue`). Shift-clicking a
+word instead skips the popup entirely and opens Cambridge Dictionary
+directly (see `externalDictionarySites.js`).
 
-While open, it's fully modal: the rest of the screen (buttons, keyboard
-shortcuts like Space/arrows/`s`/`r`/`c`) is `inert` and unreachable until it
-closes - clicking/focusing/pressing keys behind it does nothing. Closing it
-(X button, backdrop click, or Escape) immediately stops and resets any
-Record/Shadow session that was running inside the popup itself (mic
-recording, beeps, playback) - nothing keeps running in the background after
-it's gone.
-
-- The word, phonetic transcription(s) labeled by dialect (`US`/`UK`/`AU`,
-  or `??` when undetectable), US always listed first when available.
-- Up to 2 definitions per part of speech, with examples/synonyms.
-- A Wiktionary attribution line (required by the data's CC BY-SA license).
-- A play button next to the word, and one per phonetic entry with audio -
-  same triangle icon as the video's Play/Pause (`PlayPauseIcon.vue`), but
-  these never show the pause variant or toggle anything: a word clip is
-  short/one-shot, unlike a video, so there's nothing meaningful to pause.
-  Shift-click or a long-press plays that one clip at 0.5x instead of normal
-  speed - unlike the video's version, this needs no "restore afterward"
-  step, since each click is an independent one-shot play with nothing
-  persistent to revert.
-- **Record and Shadow buttons** (via the shared `useRecordShadow.js` +
-  `RecordShadowButtons.vue` also used by YT Shadowing's own controls - same
-  icons, labels, and mic engine, identical R/S/L and S/R/L/P codes):
-  - *Record*: plain toggle, auto-plays your recording back on stop.
-  - *Shadow*: one pass of play-the-word → record → listen-to-yourself. The
-    word's own clip is played first, so (unlike the video's Shadow, which
-    has to size its replay from your recording afterward) its length is
-    already known - that measured length + 0.25s becomes the recording
-    window, no guessing needed. Shift-click or a long-press (same ~500ms
-    gesture as the video's Shadow) runs a second pass immediately after the
-    first, replaying the word again rather than reusing the first pass's
-    clip.
-- Quick links to open the word in Cambridge Dictionary or WordReference,
-  each in a small centered popup window.
-- `Escape` closes the popup.
-
-This is deliberately **independent of NativeExpServer** - `dictionaryClient.js`
-fetches directly from the free, keyless Free Dictionary API
-(`api.dictionaryapi.dev`) client-side, with an in-memory cache so repeat
-lookups of the same word never re-fetch.
+While it's open, the rest of this screen (buttons, keyboard shortcuts like
+Space/arrows/`s`/`r`/`c`) is unreachable until it closes - see
+`docs/common-design-philosophy.md`'s "Modal popups" section for the general
+pattern (including how a globally-owned modal like this one wires back into
+a screen's own `:inert`/keydown guard).
 
 Pronunciation playback (`wordAudioPlayer.js`) tries a real recorded
 American-English clip from the dictionary data first, falling back to
 Google Translate TTS if none exists for that word - `playWordPronunciationTimed`
 is the same fallback chain, awaitable, resolving with the elapsed seconds
-once the clip finishes (used by Shadow above).
+once the clip finishes (used by the popup's own Shadow flow - see
+`docs/dictionary-spec.md`).
 
 ## History
 
@@ -281,9 +261,10 @@ the tool to work.
   actually does (what "the original" is, what order play/record/listen
   happens in) stays owned by each call site, built from the pieces this
   exposes - it's genuinely different between YT Shadowing's video segment
-  (record first, replay computed afterward) and the word popup's fixed-length
-  clip (play first, since its length is already known) - see "Recording &
-  shadowing" and "Dictionary lookup popup" above. `useShiftOrLongPress.js` -
+  (record first, replay computed afterward) and the dictionary popup's
+  fixed-length clip (play first, since its length is already known) - see
+  "Recording & shadowing" above and `docs/dictionary-spec.md`.
+  `useShiftOrLongPress.js` -
   the even more generic "was this press shift-clicked or long-pressed"
   gesture underneath both Shadow's double-pass and Play's temporary
   slow-speed playback; `useRecordShadow.js` builds on top of it rather than
@@ -291,13 +272,12 @@ the tool to work.
 - Components: `RecordShadowButtons.vue` (the Record + Shadow buttons
   themselves - same markup/icons wherever it's used, fed by a
   `useRecordShadow.js` instance; takes a `compact` prop for tighter contexts
-  like the word popup, versus the main screen's full-size row),
+  like the dictionary popup, versus the main screen's full-size row),
   `PlayPauseIcon.vue` (the shared triangle/pause-bars icon, takes a
   `playing` prop - the video's Play/Pause button uses both icon states, the
-  popup's play buttons only ever use the triangle), and `WordInfoPopup.vue`
-  (reusable beyond this tool by design - fetch/cache logic and display logic
-  both live outside YT Shadowing's own files - so any future part of the app
-  can show the same popup, Record/Shadow buttons included).
+  popup's play buttons only ever use the triangle), and `DictionaryPopup.vue`
+  itself - no longer owned by this tool at all, just triggered by it (see
+  `docs/dictionary-spec.md`).
 
 ## NativeExpServer (companion process)
 
@@ -317,10 +297,6 @@ dictionary/pronunciation feature choices.
   data only has one timestamp per whole line, not per word, so
   selection-based capture always rounds outward to the full line(s)
   touched, never a sub-line span.
-- **Dictionary audio coverage is inconsistent** - it's crowdsourced, so not
-  every word has a recorded clip, and there's no reliable field indicating
-  dialect when a word has no explicitly-US-labeled entry (falls back to
-  `??`).
 - **NativeExpServer must be started manually** alongside the static server
   - there's no auto-launch, and it only needs to be running for the CC/
   subtitles feature specifically (word lookups work without it).

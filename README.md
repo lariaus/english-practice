@@ -7,11 +7,26 @@ with "Recorder Loop", a hands-free record → playback self-monitoring loop.
 
 ## Test locally
 
-Run static server:
+Build the frontend:
 
 ```sh
 npm install
+npx wrangler login
+
 npm run build
+```
+
+Serve files statically:
+
+```sh
+cmake -S native-server -B native-server/build -DCMAKE_BUILD_TYPE=Release
+cmake --build native-server/build -j
+native-server/build/native_server_cli/native_server_cli --dir "$(pwd)/dist" --port 8000
+```
+
+The original one-liner still works too, until the migration removes it:
+
+```sh
 python3 -m http.server 8000 --directory dist
 ```
 

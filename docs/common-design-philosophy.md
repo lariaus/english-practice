@@ -6,8 +6,10 @@ composable/component rather than being reimplemented per screen. This doc
 catalogs those shared patterns so future work reaches for them first,
 instead of rebuilding something that already exists.
 
-**Currently in use by**: YT Shadowing only (`YtShadowingPlayerScreen.vue` and
-`WordInfoPopup.vue`). Recorder Loop and Robot Shadowing predate this work and
+**Currently in use by**: `YtShadowingPlayerScreen.vue` and `DictionaryPopup.vue`
+(the latter is a single global instance owned by `App.vue` - see "Modal
+popups" below - reachable from anywhere, not just YT Shadowing). Recorder
+Loop and Robot Shadowing predate this work and
 are built around their own hands-free, countdown-driven record→playback
 cycles (`recorderLoopEngine.js`, `robotShadowingEngine.js`) rather than a
 manually-toggled Record/Shadow pair - that's a deliberate difference in
@@ -26,16 +28,16 @@ writing a new bespoke version.
   Record toggle (start/stop, auto-plays your recording back on stop), and
   the `R`/`S`/`L` and `S`/`R`/`L`/`P` state-code labels for both buttons.
   `RecordShadowButtons.vue` takes a `compact` prop for tighter layouts (the
-  word popup) versus the main screen's full-size row - same icons/labels
-  either way, just smaller.
+  dictionary popup) versus the main screen's full-size row - same
+  icons/labels either way, just smaller.
   - What a single Shadow *pass* actually does - what "the original" is,
     what order play/record/listen happens in - stays owned by each call
     site, built from the pieces `useRecordShadow` exposes
     (`micEngine`/`micState`/`isShadowing`/`consumeWantsDouble`). That's
     deliberate: YT Shadowing's video-segment pass (record first, replay
     computed backward from the recording's real length afterward) and the
-    word popup's fixed-length clip (play first, since its length is already
-    known) are genuinely different sequences - forcing one shape onto both
+    dictionary popup's fixed-length clip (play first, since its length is
+    already known) are genuinely different sequences - forcing one shape onto both
     would've made one of them worse. Only the plumbing that's actually
     identical is shared.
 - **`useShiftOrLongPress.js`** (composable) - the generic gesture
@@ -56,7 +58,7 @@ shift-click or a long-press does a secondary thing, without an extra
 button to discover it. Currently used in:
 
 - **Transcript words** (YT Shadowing): click pauses the video and opens the
-  dictionary popup (`WordInfoPopup.vue`, word audio auto-plays on open);
+  dictionary popup (`DictionaryPopup.vue`, word audio auto-plays on open);
   shift-click skips the popup entirely and opens Cambridge Dictionary
   directly in a small centered window.
 - **Transcript lines** (YT Shadowing): click seeks to and plays from that
@@ -86,8 +88,8 @@ listen-and-repeat exercise), so there's nothing to click yet in either.
 
 ## Modal popups
 
-A modal (currently just `WordInfoPopup.vue`) isn't done just by rendering
-an overlay on top - two things are easy to miss and both caused real bugs
+A modal (currently just `DictionaryPopup.vue`) isn't done just by rendering
+an overlay on top - a few things are easy to miss and have caused real bugs
 the first time around:
 
 - **The rest of the screen must be genuinely unreachable, not just visually
@@ -114,6 +116,20 @@ the first time around:
   sequence checks between steps - engine `destroy()` alone doesn't cover a
   step that hasn't started yet (e.g. still mid-playback before a recording
   would even begin).
+- **A modal usable from *any* screen needs a single global owner, not one
+  per screen.** `DictionaryPopup.vue` started out owned locally by
+  `YtShadowingPlayerScreen.vue` (the only place that could open it); once it
+  needed to open from the Home menu and a global keyboard shortcut too, it
+  moved up to a single instance mounted in `App.vue`, sitting alongside
+  whichever screen is currently active rather than duplicated per-screen.
+  Screens that can trigger it now do so by emitting an event upward (e.g.
+  `emit('show-word', word)`) rather than holding their own `ref` to it, and
+  read its open/closed state back down via a prop (e.g. `dictionaryOpen`)
+  for their own `:inert`/keydown-guard logic - the same two rules above
+  still apply, they just now span two components instead of living in one.
+  Worth reaching for this same shape for any *future* modal that isn't
+  provably confined to a single screen, rather than discovering the need to
+  hoist it later.
 
 ## Online shared storage
 
@@ -153,8 +169,10 @@ local copy that never agrees with the others.
 - `src/components/PlayPauseIcon.vue`
 - `src/engine/micRecorderEngine.js` (owned internally by `useRecordShadow`)
 - `src/engine/externalDictionarySites.js`
-- `src/components/WordInfoPopup.vue` and `src/screens/YtShadowingPlayerScreen.vue`
-  (the two current consumers of all of the above)
+- `src/components/DictionaryPopup.vue` (globally mounted once in `App.vue`),
+  `src/screens/YtShadowingPlayerScreen.vue` (opens it via `emit('show-word')`),
+  `src/screens/HomeScreen.vue` (opens search mode via `emit('open-dictionary')`)
+  - see `docs/dictionary-spec.md` for the full picture
 - `cloudflare-worker/` (the Worker + KV backend), `src/engine/syncConfig.js`
   (the shared Worker-URL setting), `src/screens/SettingsScreen.vue` (where
   it's entered) - see `docs/setup-cloudflare.md` for setup

@@ -1,16 +1,30 @@
 <template>
-  <div class="word-info-backdrop" v-if="visible" @click.self="hide">
-    <div class="word-info-frame">
-      <button class="word-info-close" @click="hide" aria-label="Close">&times;</button>
+  <div class="dictionary-backdrop" v-if="visible" @click.self="hide">
+    <div class="dictionary-frame">
+      <button class="dictionary-close" @click="hide" aria-label="Close">&times;</button>
 
-      <p v-if="loading" class="word-info-status">Loading…</p>
+      <form v-if="mode === 'search'" class="dictionary-search-form" @submit.prevent="handleSearchSubmit">
+        <input
+          v-model="searchInput"
+          class="dictionary-search-input"
+          type="text"
+          placeholder="Search a word…"
+          autofocus
+        />
+      </form>
+
+      <p v-if="loading" class="dictionary-status">Loading…</p>
+
+      <p v-else-if="mode === 'search' && !currentWord" class="dictionary-status">
+        Type a word above and press Enter.
+      </p>
 
       <template v-else>
-        <div class="word-info-header">
-          <h2 class="word-info-word">{{ currentWord }}</h2>
-          <span v-if="info?.usPhonetics" class="word-info-header-phonetic">{{ info.usPhonetics.text }}</span>
+        <div class="dictionary-header">
+          <h2 class="dictionary-word">{{ currentWord }}</h2>
+          <span v-if="info?.usPhonetics" class="dictionary-header-phonetic">{{ info.usPhonetics.text }}</span>
           <button
-            class="word-info-play-button word-info-word-play-button"
+            class="dictionary-play-button dictionary-word-play-button"
             @pointerdown="playGesture.handlePointerDown()"
             @pointerup="playGesture.handlePointerUp"
             @pointercancel="playGesture.handlePointerCancel"
@@ -28,7 +42,10 @@
             :shadow-label="shadowLabel"
             :shadow-active="isShadowing"
             :shadow-disabled="recordSessionActive"
-            @toggle-record="toggleRecording()"
+            @toggle-record="toggleRecording($event)"
+            @record-pointerdown="handleRecordPointerDown"
+            @record-pointerup="handleRecordPointerUp"
+            @record-pointercancel="handleRecordPointerCancel"
             @shadow-click="handleShadowClick"
             @shadow-pointerdown="handleShadowPointerDown"
             @shadow-pointerup="handleShadowPointerUp"
@@ -36,16 +53,16 @@
           />
         </div>
 
-        <p v-if="micState.error" class="error-message word-info-mic-error">{{ micState.error }}</p>
+        <p v-if="micState.error" class="error-message dictionary-mic-error">{{ micState.error }}</p>
 
         <template v-if="info">
-          <div class="word-info-phonetics" v-if="info.phonetics.length">
-            <div v-for="(p, i) in info.phonetics" :key="i" class="word-info-phonetic">
-              <span class="word-info-phonetic-label">{{ p.label || '??' }}</span>
-              <span class="word-info-phonetic-text">{{ p.text }}</span>
+          <div class="dictionary-phonetics" v-if="info.phonetics.length">
+            <div v-for="(p, i) in info.phonetics" :key="i" class="dictionary-phonetic">
+              <span class="dictionary-phonetic-label">{{ p.label || '??' }}</span>
+              <span class="dictionary-phonetic-text">{{ p.text }}</span>
               <button
                 v-if="p.audio"
-                class="word-info-play-button"
+                class="dictionary-play-button"
                 @pointerdown="playGesture.handlePointerDown()"
                 @pointerup="playGesture.handlePointerUp"
                 @pointercancel="playGesture.handlePointerCancel"
@@ -57,30 +74,30 @@
             </div>
           </div>
 
-          <div class="word-info-meaning" v-for="(meaning, i) in info.meanings" :key="i">
-            <h3 class="word-info-pos">{{ meaning.partOfSpeech }}</h3>
-            <ol class="word-info-definitions">
+          <div class="dictionary-meaning" v-for="(meaning, i) in info.meanings" :key="i">
+            <h3 class="dictionary-pos">{{ meaning.partOfSpeech }}</h3>
+            <ol class="dictionary-definitions">
               <li v-for="(def, j) in meaning.definitions.slice(0, 2)" :key="j">
-                <p class="word-info-definition">{{ def.definition }}</p>
-                <p class="word-info-example" v-if="def.example">"{{ def.example }}"</p>
-                <p class="word-info-synonyms" v-if="def.synonyms.length">
+                <p class="dictionary-definition">{{ def.definition }}</p>
+                <p class="dictionary-example" v-if="def.example">"{{ def.example }}"</p>
+                <p class="dictionary-synonyms" v-if="def.synonyms.length">
                   syn: {{ def.synonyms.join(', ') }}
                 </p>
               </li>
             </ol>
           </div>
 
-          <p class="word-info-attribution" v-if="info.sourceUrl">
+          <p class="dictionary-attribution" v-if="info.sourceUrl">
             via <a :href="info.sourceUrl" target="_blank" rel="noopener">Wiktionary</a>
             <template v-if="info.license"> · {{ info.license }}</template>
           </p>
         </template>
 
-        <p v-else-if="error" class="word-info-status">{{ error }}</p>
+        <p v-else-if="error" class="dictionary-status">{{ error }}</p>
 
-        <div class="word-info-external-links">
-          <button class="word-info-external-link" @click="openReferenceSite('cambridge', currentWord)">Ca</button>
-          <button class="word-info-external-link" @click="openReferenceSite('wordreference', currentWord)">Wr</button>
+        <div class="dictionary-external-links">
+          <button class="dictionary-external-link" @click="openReferenceSite('cambridge', currentWord)">Ca</button>
+          <button class="dictionary-external-link" @click="openReferenceSite('wordreference', currentWord)">Wr</button>
         </div>
       </template>
     </div>
@@ -98,6 +115,12 @@ import RecordShadowButtons from './RecordShadowButtons.vue'
 import PlayPauseIcon from './PlayPauseIcon.vue'
 
 const visible = ref(false)
+// 'word' - opened for one specific word (a transcript click), no search bar.
+// 'search' - opened via the Home menu or the global shortcut: shows the
+// search bar, starts blank, and stays in this mode even after a lookup (so
+// you can search again) - strictly never crosses into/out of 'word' mode.
+const mode = ref('word')
+const searchInput = ref('')
 const loading = ref(false)
 const error = ref(null)
 const info = ref(null)
@@ -130,6 +153,9 @@ const {
   handleShadowPointerDown,
   handleShadowPointerUp,
   handleShadowPointerCancel,
+  handleRecordPointerDown,
+  handleRecordPointerUp,
+  handleRecordPointerCancel,
   destroy: destroyRecordShadow,
 } = useRecordShadow()
 
@@ -184,17 +210,19 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
 })
 
-async function show(word, { playWordOnOpen = false } = {}) {
+// Shared by showWord() and a search-mode lookup - fetches and displays one
+// word's info. Doesn't touch `mode` itself, so a search-mode lookup stays in
+// search mode (search bar still visible) rather than becoming word mode.
+async function loadWordInfo(word, { playWordOnOpen = false } = {}) {
   popupClosed = false
-  visible.value = true
   loading.value = true
   error.value = null
   info.value = null
   currentWord.value = word
 
   // Fired immediately, independent of the definitions fetch below, so the
-  // sound plays "as soon as the popup opens" rather than waiting on
-  // whatever else is still loading.
+  // sound plays "as soon as it's looked up" rather than waiting on whatever
+  // else is still loading.
   if (playWordOnOpen) playWordPronunciation(word)
 
   const result = await fetchWordInfo(word)
@@ -207,6 +235,34 @@ async function show(word, { playWordOnOpen = false } = {}) {
   info.value = result
 }
 
+// Word mode - opened for one specific word (a transcript click today), no
+// search bar, no path into search mode from here.
+async function showWord(word, options) {
+  mode.value = 'word'
+  visible.value = true
+  await loadWordInfo(word, options)
+}
+
+// Search mode - opened with no word yet (Home menu, or the global shortcut).
+// Always starts blank, even if a previous search is still showing from last
+// time this same instance was opened.
+function showSearch() {
+  mode.value = 'search'
+  visible.value = true
+  popupClosed = false
+  searchInput.value = ''
+  currentWord.value = ''
+  info.value = null
+  error.value = null
+  loading.value = false
+}
+
+function handleSearchSubmit() {
+  const trimmed = searchInput.value.trim()
+  if (!trimmed) return
+  loadWordInfo(trimmed, { playWordOnOpen: true })
+}
+
 // Stops and resets any in-progress Record/Shadow session (mic recording,
 // beeps, playback) immediately - closing the popup shouldn't leave any of
 // that running invisibly in the background.
@@ -216,11 +272,11 @@ function hide() {
   destroyRecordShadow()
 }
 
-defineExpose({ show, hide, visible })
+defineExpose({ showWord, showSearch, hide, visible })
 </script>
 
 <style scoped>
-.word-info-backdrop {
+.dictionary-backdrop {
   position: fixed;
   inset: 0;
   display: flex;
@@ -231,7 +287,7 @@ defineExpose({ show, hide, visible })
   z-index: 100;
 }
 
-.word-info-frame {
+.dictionary-frame {
   position: relative;
   width: 100%;
   max-width: 24rem;
@@ -245,7 +301,7 @@ defineExpose({ show, hide, visible })
   color: var(--text);
 }
 
-.word-info-close {
+.dictionary-close {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
@@ -261,12 +317,26 @@ defineExpose({ show, hide, visible })
   -webkit-tap-highlight-color: transparent;
 }
 
-.word-info-status {
+.dictionary-search-form {
+  margin: 0 2.5rem 1rem 0;
+}
+
+.dictionary-search-input {
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.6rem;
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.dictionary-status {
   margin: 0;
   color: var(--text-dim);
 }
 
-.word-info-header {
+.dictionary-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -274,48 +344,48 @@ defineExpose({ show, hide, visible })
   margin: 0 2.5rem 0.25rem 0;
 }
 
-.word-info-mic-error {
+.dictionary-mic-error {
   margin: 0 0 0.75rem;
   max-width: none;
 }
 
-.word-info-word {
+.dictionary-word {
   margin: 0;
   font-size: 1.4rem;
   font-weight: 700;
 }
 
-.word-info-header-phonetic {
+.dictionary-header-phonetic {
   color: var(--text-dim);
   font-size: 0.95rem;
 }
 
-.word-info-word-play-button {
+.dictionary-word-play-button {
   width: 2rem;
   height: 2rem;
   font-size: 0.8rem;
 }
 
-.word-info-word-play-button :deep(svg) {
+.dictionary-word-play-button :deep(svg) {
   width: 0.85rem;
   height: 0.85rem;
 }
 
-.word-info-phonetics {
+.dictionary-phonetics {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   margin: 0 0 1rem;
 }
 
-.word-info-phonetic {
+.dictionary-phonetic {
   display: flex;
   align-items: center;
   color: var(--text-dim);
   font-size: 0.95rem;
 }
 
-.word-info-phonetic-label {
+.dictionary-phonetic-label {
   display: inline-block;
   margin-right: 0.4rem;
   padding: 0.05rem 0.4rem;
@@ -327,11 +397,11 @@ defineExpose({ show, hide, visible })
   vertical-align: middle;
 }
 
-.word-info-phonetic-text {
+.dictionary-phonetic-text {
   flex: 1;
 }
 
-.word-info-play-button {
+.dictionary-play-button {
   flex-shrink: 0;
   width: 1.6rem;
   height: 1.6rem;
@@ -349,20 +419,20 @@ defineExpose({ show, hide, visible })
   -webkit-tap-highlight-color: transparent;
 }
 
-.word-info-play-button :deep(svg) {
+.dictionary-play-button :deep(svg) {
   width: 0.7rem;
   height: 0.7rem;
 }
 
-.word-info-play-button:active {
+.dictionary-play-button:active {
   transform: scale(0.92);
 }
 
-.word-info-meaning {
+.dictionary-meaning {
   margin-bottom: 1rem;
 }
 
-.word-info-pos {
+.dictionary-pos {
   margin: 0 0 0.35rem;
   font-size: 0.85rem;
   font-weight: 700;
@@ -370,43 +440,43 @@ defineExpose({ show, hide, visible })
   font-style: italic;
 }
 
-.word-info-definitions {
+.dictionary-definitions {
   margin: 0;
   padding-left: 1.1rem;
 }
 
-.word-info-definitions li {
+.dictionary-definitions li {
   margin-bottom: 0.5rem;
 }
 
-.word-info-definition {
+.dictionary-definition {
   margin: 0;
 }
 
-.word-info-example {
+.dictionary-example {
   margin: 0.15rem 0 0;
   color: var(--text-dim);
   font-size: 0.9rem;
   font-style: italic;
 }
 
-.word-info-synonyms {
+.dictionary-synonyms {
   margin: 0.15rem 0 0;
   color: var(--text-dim);
   font-size: 0.85rem;
 }
 
-.word-info-attribution {
+.dictionary-attribution {
   margin: 1rem 0 0;
   color: var(--text-dim);
   font-size: 0.75rem;
 }
 
-.word-info-attribution a {
+.dictionary-attribution a {
   color: var(--accent-1);
 }
 
-.word-info-external-links {
+.dictionary-external-links {
   display: flex;
   gap: 0.5rem;
   margin-top: 1rem;
@@ -414,7 +484,7 @@ defineExpose({ show, hide, visible })
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.word-info-external-link {
+.dictionary-external-link {
   padding: 0.4rem 0.9rem;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 999px;
@@ -426,7 +496,7 @@ defineExpose({ show, hide, visible })
   -webkit-tap-highlight-color: transparent;
 }
 
-.word-info-external-link:active {
+.dictionary-external-link:active {
   transform: scale(0.95);
 }
 </style>

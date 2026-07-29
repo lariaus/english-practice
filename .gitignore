@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Cloudflare Worker (cloudflare-worker)
+.wrangler
+
 # Python (native-exp-server)
 .venv
 native-exp-server/__pycache__

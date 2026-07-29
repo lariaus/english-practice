@@ -6,7 +6,9 @@ A small collection of self-practice "tools" for improving English pronunciation:
 **Recorder Loop** (see `pronunciation-self-monitor-spec.md`), **Robot
 Shadowing** (see `robot-shadowing-spec.md`), and **YT Shadowing** (see
 `yt-shadowing-spec.md`), designed to accommodate more tools later without
-rework.
+rework. **Dictionary** (see `dictionary-spec.md`) is a different shape of
+"tool" - a global popup reachable from anywhere, not a screen you navigate
+to (see below).
 
 This doc covers the app shell: navigation structure, tech stack, and local
 development/testing workflow. Tool-specific behavior lives in its own doc file
@@ -16,8 +18,8 @@ one of them) live in `common-design-philosophy.md`.
 ## App Structure / Navigation
 
 - **Home screen**: a menu listing available tools (a simple list of
-  buttons/cards) — currently **"Recorder Loop"**, **"Robot Shadowing"**, and
-  **"YT Shadowing"**.
+  buttons/cards) — currently **"Recorder Loop"**, **"Robot Shadowing"**,
+  **"YT Shadowing"**, and **"Dictionary"**.
 - **Tool screen**: reached by tapping a tool on the home screen.
   - Has its own **Back** button to return to the home screen.
   - **Recorder Loop** first shows a duration picker — a row of buttons for
@@ -29,6 +31,12 @@ one of them) live in `common-design-philosophy.md`.
   - **YT Shadowing** first shows a URL-entry/history screen, then a second
     screen with the video player and all controls — see its own spec doc
     for details.
+  - **Dictionary** is the one exception to "tapping a tool reaches a new
+    screen" — it opens a popup overlay on top of whatever's currently
+    showing (Home included) instead of navigating anywhere. It's also
+    reachable without ever visiting Home at all: a global keyboard shortcut
+    opens it from any screen, and YT Shadowing's transcript-word click opens
+    it pre-filled with that word — see `dictionary-spec.md`.
 - Routing between Home and tool screens: no full router library needed for
   now — a tiny reactive "current screen" value is enough given how few
   screens exist. Revisit only if the number of tools/screens grows a lot.

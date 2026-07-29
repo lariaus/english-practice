@@ -1,5 +1,5 @@
 // Opens external dictionary/reference sites for a word in a small centered
-// popup window - shared so both WordInfoPopup (its "Ca"/"Wr" links) and
+// popup window - shared so both DictionaryPopup (its "Ca"/"Wr" links) and
 // YtShadowingPlayerScreen (its shift-click-a-word shortcut) open the same
 // site the same way, rather than each keeping its own copy.
 

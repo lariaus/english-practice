@@ -1,5 +1,5 @@
 // Plays a word's pronunciation - the shared, reusable "make a word audible"
-// primitive, callable from anywhere in the app (not just WordInfoPopup).
+// primitive, callable from anywhere in the app (not just DictionaryPopup).
 //
 // Structurally different from ttsEngine.js's TTSEngine: that class commits
 // to a single user-selected voice backend for speaking arbitrary text (pick
@@ -56,7 +56,7 @@ function getGoogleTts() {
 // Plays the best available pronunciation for `word`: a real US dictionary
 // recording if one exists, otherwise Google Translate TTS. `rate` (1 =
 // normal) is used by the popup's shift-click/long-press "play slower"
-// gesture - see WordInfoPopup.vue.
+// gesture - see DictionaryPopup.vue.
 export async function playWordPronunciation(word, lang = 'en', rate = 1) {
   const info = await fetchWordInfo(word, lang)
   const usEntry = info?.phonetics.find((p) => p.label === 'US' && p.audio)
