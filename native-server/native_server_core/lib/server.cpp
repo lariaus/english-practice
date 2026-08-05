@@ -9,6 +9,11 @@
 #include <httplib.h>
 #include <nlohmann/json.hpp>
 
+#include "storage_route.h"
+#include "subtitles_route.h"
+
+#include <storage_map/storage_map.h>
+
 #include <atomic>
 #include <ctime>
 #include <iostream>
@@ -38,20 +43,35 @@ std::string formatLogTimestamp() {
 }  // namespace
 
 struct Server::Impl {
-  explicit Impl(ServerOptions opts) : options(std::move(opts)) {}
+  explicit Impl(ServerOptions opts) : options(std::move(opts)), storageRegistry(options.dataDir) {}
 
   ServerOptions options;
   httplib::Server svr;
+  storage_map::StorageMapRegistry storageRegistry;
   std::thread listenThread;
   std::atomic<bool> running{false};
 
   void registerRoutes() {
+    svr.Get("/health", [](const httplib::Request&, httplib::Response& res) {
+      res.set_content(nlohmann::json{{"status", "ok"}, {"service", "NativeServer"}}.dump(),
+                       "application/json");
+    });
+    registerSubtitlesRoute(svr);
+    registerStorageRoutes(svr, storageRegistry);
+
     if (!svr.set_mount_point("/", options.rootDir.string())) {
       throw ServerError("Failed to mount rootDir: " + options.rootDir.string());
     }
     svr.set_file_extension_and_mimetype_mapping("webmanifest", "application/manifest+json");
 
     svr.set_error_handler([](const httplib::Request&, httplib::Response& res) {
+      // cpp-httplib calls this unconditionally for any status >= 400 - if
+      // a route handler already set a specific JSON error body (e.g.
+      // /subtitles), leave it alone; only fill in a generic message when
+      // nothing was set (e.g. httplib's own built-in static-file 404).
+      if (!res.body.empty()) {
+        return;
+      }
       std::string message = res.status == 404 ? "Not found" : "Error";
       res.set_content(jsonError(message), "application/json");
     });

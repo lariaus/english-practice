@@ -155,9 +155,11 @@ to short state codes rather than full words:
     span (record length = that cue's own clamped length, speed-adjusted +
     1s, not a fixed duration), then advances cue by cue. Stops once it runs
     out of cues, even if video content continues past the last one.
-  - If no cues are available at all (NativeExpServer isn't running, or this
-    video has no captions) - or subtitles were never turned on and none
-    could be found - falls back to the original fixed-window behavior:
+  - If no cues are available at all (native-server isn't reachable - e.g.
+    running from plain GitHub Pages hosting with no backing server at all
+    - or this video has no captions) - or subtitles were never turned on
+    and none could be found - falls back to the original fixed-window
+    behavior:
     consecutive 4s windows starting from the current position, continuing
     until the video ends.
 
@@ -182,9 +184,10 @@ lazily, on first toggle-on; toggling off/on again never re-fetches):
   Shadow is active - opening the popup mid-session would fight with
   whatever they're doing with the mic/video.
 
-Subtitles are fetched through **NativeExpServer** (see its own section
-below) - entirely optional; if it's not running, the CC button just does
-nothing visible.
+Subtitles are fetched through **native-server** (see its own section
+below) - the same server already serving the app itself, not a separate
+process. Gracefully degrades to nothing visible only when the app isn't
+backed by native-server at all (e.g. plain GitHub Pages hosting).
 
 ## Dictionary lookup
 
@@ -223,7 +226,7 @@ Backed by a small Cloudflare Worker + KV store (see
 for setup commands) instead of `localStorage` - the same list is shared
 across every device once a sync server URL is set in Settings (reachable
 from the Home screen, not owned by this tool specifically). Best-effort
-only, same convention as NativeExpServer: with no URL configured (the
+only, same convention as native-server's subtitles fetching: with no URL configured (the
 default), history silently does nothing - never required for the rest of
 the tool to work.
 
@@ -279,17 +282,20 @@ the tool to work.
   itself - no longer owned by this tool at all, just triggered by it (see
   `docs/dictionary-spec.md`).
 
-## NativeExpServer (companion process)
+## native-server (caption fetching)
 
-A small, optional local server (`native-exp-server/`, plain Python stdlib
-`http.server` + the `youtube-transcript-api` package) that fetches YouTube
-captions on the app's behalf, since a browser can't read them directly (no
-CORS headers on YouTube's caption endpoint). Exposes `GET /health` and
-`GET /subtitles?url=...&lang=en`. The app pings `/health` first and
-silently skips subtitle-dependent features if it's not reachable - never
-required for the rest of the app to work. See its own `README.md` for setup
-and `docs/dictionnary_sources_research.md` for the research behind the
-dictionary/pronunciation feature choices.
+`native-server/` - the same C++ server that serves the app's own static
+files - also fetches YouTube captions on the app's behalf, since a browser
+can't read them directly (no CORS headers on YouTube's caption endpoint).
+Exposes `GET /health` and `GET /subtitles?url=...&lang=en`, matching what
+used to be a separate Python companion process (`native-exp-server/`,
+removed once this native C++ implementation reached parity). The app
+pings `/health` first
+and silently skips subtitle-dependent features if it's not reachable
+(e.g. when running from plain GitHub Pages hosting with no backing server
+at all) - never required for the rest of the app to work. See
+`native-server/README.md` for setup, and `docs/dictionnary_sources_research.md`
+for the research behind the dictionary/pronunciation feature choices.
 
 ## Explicitly out of scope / known limitations
 
@@ -297,6 +303,3 @@ dictionary/pronunciation feature choices.
   data only has one timestamp per whole line, not per word, so
   selection-based capture always rounds outward to the full line(s)
   touched, never a sub-line span.
-- **NativeExpServer must be started manually** alongside the static server
-  - there's no auto-launch, and it only needs to be running for the CC/
-  subtitles feature specifically (word lookups work without it).

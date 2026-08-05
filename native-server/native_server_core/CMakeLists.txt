@@ -1,5 +1,9 @@
 add_library(native_server_core STATIC
   lib/server.cpp
+  lib/capi.cpp
+  lib/subtitles_route.cpp
+  lib/youtube_video_id.cpp
+  lib/storage_route.cpp
 )
 
 target_include_directories(native_server_core PUBLIC
@@ -9,4 +13,6 @@ target_include_directories(native_server_core PUBLIC
 target_link_libraries(native_server_core PUBLIC
   httplib::httplib
   nlohmann_json::nlohmann_json
+  youtube_utils
+  storage_map
 )

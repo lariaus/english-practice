@@ -15,9 +15,18 @@ dist-ssr
 # Cloudflare Worker (cloudflare-worker)
 .wrangler
 
-# Python (native-exp-server)
+# native-server's local data (sync server URL, etc.) - default location
+# when run from the repo root, see README.md "Data storage location"
+.app_data
+
+# Python (ad hoc venvs, e.g. for regenerating native-server's parity test data)
 .venv
-native-exp-server/__pycache__
+__pycache__
+
+# Xcode - personal per-developer UI/scheme state, not shared project config
+xcuserdata/
+DerivedData/
+*.xcuserstate
 
 # Editor directories and files
 .vscode/*

@@ -1,8 +1,7 @@
 # native-server
 
 C++ replacement for the ad hoc `python3 -m http.server 8000 --directory
-dist` command (see `../docs/migration-to-offline-app/step-2.md` for the
-full design). Serves a directory of static files - built as an embeddable
+dist` command. Serves a directory of static files - built as an embeddable
 library (`native_server_core`) with a thin CLI wrapper (`native_server_cli`)
 on top, so it can later be linked directly into a native app instead of run
 as a subprocess (iOS doesn't allow spawning arbitrary subprocesses).
@@ -15,8 +14,12 @@ cmake --build build -j
 ```
 
 Requires network access at configure time (CMake `FetchContent` pulls
-cpp-httplib, nlohmann/json, and Catch2, each pinned to a specific tag) -
-build-time only, unrelated to this project's offline-first runtime goals.
+cpp-httplib, nlohmann/json, pugixml, and Catch2, each pinned to a specific
+tag) - build-time only, unrelated to this project's offline-first runtime
+goals.
+
+Apple-only (macOS/iOS) from here on - `https_client` wraps `NSURLSession`
+(Objective-C++), not OpenSSL, so there's no Linux build.
 
 ## Run
 
@@ -34,19 +37,31 @@ there's no default directory.
 ctest --test-dir build --output-on-failure
 ```
 
-or run the test binary directly: `./build/tests/native_server_tests`.
+One binary per test file (see `tests/CMakeLists.txt`'s header comment) -
+`ctest` output is one line per file. Run an individual binary directly
+(e.g. `./build/tests/native_server_test_subtitles_route`) for full Catch2
+detail, optionally with `--success` or a `[tag]` filter.
+
+Most tests need live network access (they hit real HTTPS servers,
+including real YouTube) - deliberate, matching Python's actual live
+behavior is the goal. The one parity test
+(`native_server_test_youtube_utils_parity`) additionally needs a Python
+environment with `youtube_transcript_api` installed (`pip install
+youtube-transcript-api` into any venv) the first time it runs for a given
+video, or whenever `REGENERATE_PYTHON_REF_DATA` is set - otherwise it
+reuses its cached reference data (`build/youtube_parity_cache/`,
+gitignored) with no Python dependency.
 
 ## Scope
 
-- Static file serving only, for now. No `/health` or `/subtitles` endpoints
-  yet - those arrive when `native-exp-server`'s job gets folded into this
-  same server in a later migration step.
-- No HTTPS/TLS - `localhost` already counts as a secure context for browser
-  APIs like `getUserMedia`, so this server never needs to terminate TLS
-  itself; the existing Cloudflare-tunnel-for-remote-HTTPS approach is
-  unaffected.
+- Static file serving, plus `GET /health` and `GET /subtitles` (YouTube
+  caption fetching) and `GET`/`PUT`/`DELETE /storage/maps/:mapId/:key`
+  (small local key-value storage).
+- No HTTPS/TLS *server* - `localhost` already counts as a secure context
+  for browser APIs like `getUserMedia`, so this server never needs to
+  terminate TLS itself; the existing Cloudflare-tunnel-for-remote-HTTPS
+  approach is unaffected. (It does make outbound HTTPS *client* requests,
+  via `https_client`, to fetch captions from YouTube.)
 - No response compression.
 
-See `../docs/migration-to-offline-app/step-2.md` for the full design
-rationale, and `CODING_STYLE.md` for this subproject's naming/structure
-conventions.
+See `CODING_STYLE.md` for this subproject's naming/structure conventions.

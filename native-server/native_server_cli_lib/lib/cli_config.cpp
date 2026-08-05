@@ -18,6 +18,7 @@ ResolvedConfig resolveConfig(const std::vector<std::string>& args, const EnvLook
   std::optional<std::string> cliHost;
   std::optional<std::string> cliPortStr;
   std::optional<std::string> cliDir;
+  std::optional<std::string> cliDataDir;
 
   for (std::size_t i = 0; i < args.size(); ++i) {
     const std::string& arg = args[i];
@@ -32,6 +33,8 @@ ResolvedConfig resolveConfig(const std::vector<std::string>& args, const EnvLook
       cliPortStr = next();
     } else if (arg == "--dir") {
       cliDir = next();
+    } else if (arg == "--data-dir") {
+      cliDataDir = next();
     } else {
       throw ConfigError("Unknown argument: " + arg);
     }
@@ -54,6 +57,14 @@ ResolvedConfig resolveConfig(const std::vector<std::string>& args, const EnvLook
     throw ConfigError("Missing served directory - pass --dir <path> or set NATIVE_SERVER_DIR");
   }
   config.dir = *dir;
+
+  // Relative to the CWD the CLI is invoked from (resolved to an absolute
+  // path by main.cpp, same as dir) - not home-relative, since the
+  // documented usage always runs this from the repo root, and a
+  // repo-root-relative ".app_data" is what's actually wanted there.
+  std::optional<std::string> dataDir =
+      cliDataDir ? cliDataDir : envOrNull(envLookup, "NATIVE_SERVER_DATA_DIR");
+  config.dataDir = dataDir.value_or(".app_data");
 
   return config;
 }

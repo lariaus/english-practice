@@ -1,0 +1,43 @@
+#!/bin/sh
+set -e
+
+# Prints the live Cloudflare Worker URL (see docs/cross-device-sync.md).
+# Deliberately not committed anywhere as a literal string - reconstructed
+# here from the account's workers.dev subdomain + the Worker's name.
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+    . "$HOME/.nvm/nvm.sh"
+    nvm use 22 >/dev/null 2>&1 || true
+fi
+
+ACCOUNT_ID=$(npx wrangler whoami 2>/dev/null | awk -F'│' 'NF>=3 { gsub(/ /, "", $3); if ($3 ~ /^[a-f0-9]{32}$/) print $3 }')
+if [ -z "$ACCOUNT_ID" ]; then
+    echo "error: couldn't determine Cloudflare Account ID from 'wrangler whoami' - are you logged in? (npx wrangler login)" >&2
+    exit 1
+fi
+
+TOKEN=$(grep -o 'oauth_token = "[^"]*"' "$HOME/Library/Preferences/.wrangler/config/default.toml" | cut -d'"' -f2)
+if [ -z "$TOKEN" ]; then
+    echo "error: no oauth_token found in ~/Library/Preferences/.wrangler/config/default.toml" >&2
+    exit 1
+fi
+
+# Cloudflare rejects this call from a plain curl User-Agent even with a
+# valid token - a wrangler-looking one is required.
+SUBDOMAIN=$(curl -s -H "Authorization: Bearer $TOKEN" -H "User-Agent: wrangler/4.114.0" \
+    "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/subdomain" |
+    tr -d '\n' | sed -n 's/.*"subdomain"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+if [ -z "$SUBDOMAIN" ]; then
+    echo "error: couldn't determine workers.dev subdomain from the Cloudflare API" >&2
+    exit 1
+fi
+
+WORKER_NAME=$(sed -n 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$REPO_ROOT/cloudflare-worker/wrangler.jsonc" | head -1)
+if [ -z "$WORKER_NAME" ]; then
+    echo "error: couldn't read Worker name from cloudflare-worker/wrangler.jsonc" >&2
+    exit 1
+fi
+
+echo "https://${WORKER_NAME}.${SUBDOMAIN}.workers.dev"

@@ -1,0 +1,662 @@
+STEP 2 RESULTS — Criteria filtering for shadowing channels
+Total: 163  |  Pass: 88  |  Fail: 75
+
+======================================================================
+PASS (88)
+======================================================================
+
+- deepfocuslens
+    https://www.youtube.com/@deepfocuslens
+    Borderline - solo host 'Maggie' doing casual movie talking-head reviews; no bio confirms nationality/accent, but no foreign-origin red flags surfaced either
+
+- Chris Stuckmann
+    https://www.youtube.com/@chrisstuckmann
+    Solo host, confirmed American, born and raised in the Akron/Boston Heights, Ohio area; clear neutral accent, talking-head film reviews with no guest format
+
+- Sean Chandler Talks About
+    https://www.youtube.com/@SeanChandlerTalksAbout
+    Solo host based in Austin, Texas, American; occasionally brings on guests (other YouTubers, actors) but that reads as occasional, not a recurring segment
+
+- Lessons from the Screenplay
+    https://www.youtube.com/@LessonsfromtheScreenplay
+    Solo host Michael Tucker, Los Angeles-based since 2010, presents as American with a clear neutral accent; solo-narrated video essays, no guest format
+
+- Pete Peppers
+    https://www.youtube.com/@PetePeppers1
+    Borderline - solo host, described as US-based across available profile sources; doing TV recap/review talking-head videos with no interview/guest format found
+
+- A Clockwork Reader
+    https://www.youtube.com/@AClockworkReader
+    Single host Hannah Azerang, from California, American; primarily solo talking-head book/TV discussion, with only one one-off author interview rather than a recurring format
+
+- PeruseProject
+    https://www.youtube.com/@PeruseProject
+    Single host Regan, American, based in Texas; content is solo vlog-style book reviews and recommendations, speech-focused with no interview/guest format at all
+
+- Daniel Greene
+    https://www.youtube.com/@DanielGreeneReviews
+    Single host, American; primarily solo fantasy book reviews and rankings - the well-known Brandon Sanderson interview is a rare one-off, not a recurring guest segment
+
+- Graham Stephan
+    https://www.youtube.com/@GrahamStephan
+    Solo host on the main channel, American, born and raised in Santa Monica, California; his interview-heavy 'Iced Coffee Hour' podcast lives on a separate channel
+
+- Meet Kevin
+    https://www.youtube.com/@MeetKevin
+    Borderline - primarily solo talking-head format; Kevin Paffrath was born in Germany but moved to the US at 18 months old and was raised in Florida/California
+
+- Zeihan on Geopolitics
+    https://www.youtube.com/@ZeihanonGeopolitics
+    Single recurring host, Peter Zeihan, no frequent-guest format; born and raised in Marshalltown, Iowa, giving a neutral Midwestern/General American accent and straight talking-head analysis
+
+- RealLifeLore
+    https://www.youtube.com/@RealLifeLore
+    Single consistent narrator, Joseph Pisenti, confirmed across many episode credits; born in Santa Cruz, CA and raised in the Dallas-Fort Worth area of Texas
+
+- Cleo Abram
+    https://www.youtube.com/@CleoAbram
+    Borderline - mainly solo narrator/host doing monthly explainer episodes; a 'Huge Conversations' spinoff series brings on a different guest, but that's described as posted rarely
+
+- MrMobile [Michael Fisher]
+    https://www.youtube.com/@TheMrMobile
+    Solo host, tech-review format with no interview/guest structure; Michael Fisher was born in Southampton, New York, USA, giving a clear neutral American accent
+
+- Vsauce
+    https://www.youtube.com/@Vsauce
+    Single host Michael Stevens, born Kansas City, Missouri and raised in Stilwell, Kansas - a solidly American upbringing; direct-to-camera narration/talking-head format throughout
+
+- Brandon Sanderson
+    https://www.youtube.com/@BrandSanderson
+    Single host, American author born in Lincoln, Nebraska, now living in Utah; vlog/lecture-style channel delivered talking-head to camera with a clear neutral accent
+
+- Terrible Writing Advice
+    https://www.youtube.com/@TerribleWritingAdvice
+    Single creator J.P. Beaubien voices all characters himself in this animated satire channel; born and raised in eastern Tennessee, confirming a neutral American accent
+
+- Gregory B. Sadler - That Philosophy Guy
+    https://www.youtube.com/@GregoryBSadler
+    Single host, American philosopher born and raised in Monroe, Wisconsin, US Army veteran; channel is almost entirely solo philosophy lectures to camera, no guest format
+
+- The Why Files
+    https://www.youtube.com/@TheWhyFiles
+    Hosted/narrated by creator AJ Gentile, born in the Bronx and raised around NYC/Long Island, American; narration-driven storytelling format well suited to shadowing
+
+- shane
+    https://www.youtube.com/@shane
+    Main channel of Shane Dawson, American, born and raised in Long Beach, California; vlog/talking-head/docuseries narration is the bulk of output, occasional guests only
+
+- Bailey Sarian
+    https://www.youtube.com/@baileysarian
+    Single host, American, born in Los Angeles and raised in Menifee, California; 'Murder, Mystery & Makeup' is solo narration to camera, strong speech-focused format
+
+- Stephanie Harlowe
+    https://www.youtube.com/@StephanieHarlowe
+    Single host, American, raised in the US; main channel is solo true-crime narration/storytelling with a clear neutral accent and no recurring guest format
+
+- Kendall Rae
+    https://www.youtube.com/@KendallRae
+    Main channel is Kendall Rae solo, presenting true crime cases in talking-head/narration style; she's American (Boston/Atlanta/Denver), guests only appear on a separate podcast
+
+- MrBallen
+    https://www.youtube.com/@MrBallen
+    Solo narrator Jonathan Allen, American, born and raised in Quincy, Massachusetts, former US Navy SEAL; entirely solo talking-head/narration of true stories, no guest format
+
+- Dr. Tracey Marks
+    https://www.youtube.com/@DrTraceyMarks
+    Solo psychiatrist channel, no co-hosts or guests; American, from Daytona Beach, educated at Duke and Cornell, now practicing in Atlanta, with a clear neutral accent
+
+- HealthyGamerGG
+    https://www.youtube.com/@HealthyGamerGG
+    Borderline - Dr. Alok Kanojia is the single recurring speaker across most content; American, born and raised in Texas; some collab streams feature other creators, not clearly a majority
+
+- SciShow Psych
+    https://www.youtube.com/@SciShowPsych
+    Three recurring rotating hosts (Hank Green, Brit Garner, Anthony Brown), no outside interview guests, fits within the 1-4 speaker rule; confirmed American backgrounds
+
+- Thomas Frank
+    https://www.youtube.com/@ThomasFrank
+    Main channel is solo instructional/productivity talking-head videos; guest interviews happen only on a separate weekly podcast; American, born and raised in Des Moines, Iowa
+
+- Matt D'Avella
+    https://www.youtube.com/@mattdavella
+    Main channel is solo, scripted, cinematic talking-head/narration videos on minimalism and productivity; occasional creator collaborations are infrequent, and he's American with a clear neutral accent
+
+- Science of People with Vanessa Van Edwards
+    https://www.youtube.com/channel/UCj9QBB4bNTv29f4oFIreNmw
+    Single regular host Vanessa Van Edwards, confirmed born and raised in Los Angeles, California; her own channel is talking-head content, not a guest-format show
+
+- Jefferson Fisher
+    https://www.youtube.com/@jeffersonfisher
+    Solo host, no guests - a Texas lawyer confirmed born in Beaumont/Silsbee, Texas; short talking-head clips giving communication advice, squarely speaking-focused content
+
+- Theo - t3.gg
+    https://www.youtube.com/@t3dotgg
+    Borderline - Theo Browne is confirmed American, San Francisco-based; content is mostly solo commentary and coding streams, though his podcast segment occasionally brings on guests
+
+- ThePrimeagen
+    https://www.youtube.com/@ThePrimeagen
+    Real name Michael B. Paulson, confirmed American; live coding, reactions to programming news, and opinionated commentary content is primarily solo without a recurring guest structure
+
+- BibleProject
+    https://www.youtube.com/@bibleproject
+    Two recurring co-founders/hosts, Tim Mackie and Jon Collins, both raised in Portland, Oregon; the main channel's animated explainer videos are narrated by just these two
+
+- Tiago Forte
+    https://www.youtube.com/@TiagoForte
+    Solo host; described in his own bio as 'a first-generation American, born and raised in Orange County in Southern California,' satisfying the nationality requirement clearly
+
+- Nerdwriter1
+    https://www.youtube.com/@Nerdwriter1
+    Solo host Evan Puschak, confirmed American, originally from Holland, Pennsylvania, educated at Boston University; narrated video essays are the whole format, well suited to shadowing
+
+- Mic The Snare
+    https://www.youtube.com/@MicTheSnare
+    Solo host Nick Canovas, confirmed American, a native of Bethlehem, New York; music analysis video essays combine talking-head commentary with music clips, speaking-focused
+
+- Alex Hormozi
+    https://www.youtube.com/@AlexHormozi
+    Solo talking-head format, born Towson, Maryland, first-generation Iranian-American; occasionally joined by wife Leila (still only 2 recurring speakers), no frequent-guest format found
+
+- Neil Patel
+    https://www.youtube.com/@neilpatel
+    Born in London, England to Indian immigrant parents, but moved to Orange County, California at age 2 and was raised entirely in the US from early childhood
+
+- Jessica Kobeissi
+    https://www.youtube.com/@JessicaKobeissi
+    Born and raised in Detroit, Michigan (Lebanese-American), American by birth and upbringing with a standard US accent; solo host doing tutorials and talking-head vlogs
+
+- Overly Sarcastic Productions
+    https://www.youtube.com/@OverlySarcasticProductions
+    Exactly two recurring co-hosts, 'Red' and 'Blue,' both apparently American (attended Boston University), no rotating-guest format; narration over animation, speech-driven content
+
+- The Lore Lodge
+    https://www.youtube.com/@TheLoreLodge
+    Solo host Aidan Mattis, Penn State-educated American, narrates history/legend stories casually; format is narration/storytelling, single recurring host, no guest pattern found
+
+- Tony Robbins
+    https://www.youtube.com/@TonyRobbinsLive
+    Born Anthony Mahavoric in North Hollywood, California; American motivational speaker, solo presenter throughout his seminars/keynotes, entirely speech-focused lectures and coaching content
+
+- Abraham-Hicks Publications
+    https://www.youtube.com/user/AbrahamHicks
+    Sole regular speaker is Esther Hicks, born in Coalville, Utah, American, presenting workshops/channeling sessions solo; talking-head/lecture style, clearly speech-focused with a standard accent
+
+- Dr Joe Dispenza
+    https://www.youtube.com/@drjoedispenza
+    American author/lecturer, born in Buffalo, New York per most sources; solo presenter delivering lectures on neuroscience/meditation, a consistent single-speaker speaking-focused format
+
+- Better Than Food
+    https://www.youtube.com/@BetterThanFoodBookReviews
+    Single host Cliff Sargent, solo channel with spoken book/film/poetry reviews, talking-head, speaking-focused; born in Norman, Oklahoma and raised near Portland, Oregon, confirmed American
+
+- Todd V Dating
+    https://www.youtube.com/@ToddVDating
+    Solo host, speaking-focused talking-head/Q&A format answering viewer questions directly to camera; no co-hosts or recurring guest segment found, no foreign-origin evidence surfaced
+
+- Playing With Fire
+    https://www.youtube.com/@PlayingWithFireChannel
+    Borderline - single recurring host Alex Vilenchik, no recurring guest-interview segment found on this channel; one AI-summarized bio calls him American, but no primary-source confirmation located
+
+- The Gottman Institute
+    https://www.youtube.com/@TheGottmanInstitute
+    Two regular recurring speakers, Dr. John and Dr. Julie Gottman, both documented Americans (Portland, Oregon and Brooklyn, NY-raised); educational, speaking-focused talking-head relationship advice
+
+- Self Made Millennial
+    https://www.youtube.com/@selfmademillennial
+    Solo-hosted talking-head channel by Madeline Mann; rapid-fire career/job-search advice videos, no recurring guest segment found; American, US-based education and media appearances throughout
+
+- Mob Fireside Chat - American Mafia History
+    https://www.youtube.com/@MobFiresideChat
+    Borderline - sole producer/narrator Lisa Babick, no guest format; NYC-based per professional profile with a standard American background, though no explicit birthplace quote was found
+
+- Nick Crowley
+    https://www.youtube.com/@NickCrowley
+    Borderline - solo stable narrator; multiple bio sources (Famous Birthdays, Wikitubia) consistently state born July 1998 in Buffalo, New York, American, though not first-person confirmed
+
+- Nexpo
+    https://www.youtube.com/@nexpo
+    Borderline - single stable narrator Ryan Cantu, no rotating guest narrators found; one low-authority bio site states 'born and raised in the US,' not independently corroborated
+
+- ESOTERICA
+    https://www.youtube.com/@TheEsotericaChannel
+    Solo host Dr. Justin Sledge, no interview/guest rotation; American, born and raised in a working-class family in Mississippi, now a professor in Detroit, Michigan
+
+- Weird History
+    https://www.youtube.com/@WeirdHistory
+    Narration-based channel; primary narrator Tom Blank has voiced 550+ of roughly 600 episodes since 2018 and is a confirmed American voice actor, rare fill-ins also American
+
+- Isaac Arthur
+    https://www.youtube.com/@isaacarthurSFIA
+    Sole narrator/writer for all episodes, no interview/guest format; American, born in Sebastopol, California, raised in Northeast Ohio, US Army combat veteran with a physics degree
+
+- Technology Connections
+    https://www.youtube.com/@TechnologyConnections
+    Solo host Alec Watson; confirmed American from Chicago, Illinois, corroborated by multiple independent sources with no conflicting information; talking-head narration plus product-demo footage
+
+- Asianometry
+    https://www.youtube.com/@Asianometry
+    Solo narrator/creator 'Jon Y,' American-born Chinese; per his own interviews he grew up in Southern California, did undergrad/MBA at UC Berkeley before relocating to Taipei
+
+- Company Man
+    https://www.youtube.com/@companyman114
+    Single host/creator 'Mike' narrates all videos alone in a faceless documentary style, no interview/guest format found; multiple sources describe him as an American YouTuber
+
+- Primal Space
+    https://www.youtube.com/@primalspace
+    Borderline - written/produced by Scottish creator Ewan Cunningham, who stays invisible and hired an American narrator ('Beau') to voice every video; no guests, fully narrated documentary style
+
+- Stewart Hicks
+    https://www.youtube.com/@stewarthicks
+    Single recurring host, architecture professor Stewart Hicks, doing solo talking-head explainer videos with no guest/interview format; from Ann Arbor, Michigan, University of Illinois Chicago professor
+
+- mila tequila
+    https://www.youtube.com/@milatequila
+    Solo channel with no evidence of a recurring co-host or guest format, doing pop-culture/celebrity commentary and narration; American, described as Louisiana-raised in interviews/bios
+
+- Cruel World Happy Mind
+    https://www.youtube.com/@cruelworldhappymind
+    Hosted solely by Madison Harnish, single narrator doing commentary on MLMs and unethical business practices, no co-host or guest format; listed on LinkedIn as Phoenix, Arizona-based
+
+- Spill Sesh
+    https://www.youtube.com/@SpillSesh
+    Solo host Kristi Cook runs the channel alone with no recurring co-hosts or guest segment; identified as an American creator based in LA, former journalist
+
+- LegalEagle
+    https://www.youtube.com/@LegalEagle
+    Solo host Devin Stone, a real American lawyer (UCLA undergrad and law school, practiced at major firms, now runs his own DC-area firm); talking-head legal commentary
+
+- Matt Wolfe
+    https://www.youtube.com/@mreflow
+    Sole regular on-camera host doing talking-head AI news breakdowns, with guests rare on this specific channel (his interview-heavy podcast lives separately); San Diego, California-based, American
+
+- PolyMatter
+    https://www.youtube.com/@PolyMatter
+    Borderline - single consistent anonymous-ish narrator (identified as Evan Schweikert, with a US-registered LLC) with no guests; American surname and no documented foreign upbringing or accent complaints
+
+- The Andrew Schulz
+    https://www.youtube.com/@TheAndrewSchulz
+    Borderline - mainly solo stand-up specials and crowd-work/commentary clips on this specific channel, distinct from his separate guest-heavy podcast channels; American, born and raised in NYC
+
+- Tom Segura
+    https://www.youtube.com/@tomsegura
+    This channel is Tom Segura's personal standup channel, distinct from his podcast channels; standup clips/specials are a single-speaker solo stage format, born/raised in the US
+
+- Defunctland
+    https://www.youtube.com/@Defunctland
+    One-person operation - creator Kevin Perjurer writes, narrates, and hosts virtually all episodes solo; American, from Kansas City, Kansas, clear neutral Midwestern accent, no co-hosts
+
+- Amy Landino (AmyTV)
+    https://www.youtube.com/@AmyTV
+    Borderline - sole recurring host of AmyTV, solo talking-head/vlog videos for the large majority of content; occasional guest-style content exists but doesn't appear to be a recurring segment
+
+- Roberto Blake
+    https://www.youtube.com/@RobertoBlake
+    Roberto Blake runs his main channel as a solo creator with talking-head tutorials on YouTube growth and design; born in Brooklyn, NY, raised in North Carolina, American
+
+- Mark Rober
+    https://www.youtube.com/@MarkRober
+    Sole regular host/narrator; occasional collaborations with other creators are one-off cross-promotions rather than a recurring guest segment; born Orange County, raised Brea, California, American
+
+- iJustine
+    https://www.youtube.com/@ijustine
+    Justine Ezarik hosts solo - her main channel is built around individual vlogs and tech reviews, not a recurring interview format; American, born/raised Pittsburgh area, Pennsylvania
+
+- Austin Evans
+    https://www.youtube.com/@austinevans
+    Austin Evans runs a solo channel; occasional cameos exist but there's no recurring guest or interview format; Wikipedia states he was born in Missouri and homeschooled there, American
+
+- The Philip DeFranco Show
+    https://www.youtube.com/@PhilipDeFranco
+    Solo-hosted fast-paced vlog/commentary format confirmed via Wikipedia and IMDb; guests appear only occasionally, not as a recurring fixture; born and raised in The Bronx, New York City
+
+- Daily Stoic
+    https://www.youtube.com/@DailyStoic
+    Borderline - the main channel is predominantly single-host Ryan Holiday solo narrating/reading Stoic lessons; occasional guest cameos exist but aren't the dominant recurring format on this specific channel
+
+- CinemaSins
+    https://www.youtube.com/@cinemasins
+    Sole regular narrator Jeremy Scott, American, born in Nashville, TN, does virtually all voiceover with only one archival exception; no interview/guest format, continuous narration
+
+- Jenny Nicholson
+    https://www.youtube.com/@JennyNicholson
+    Solo channel with a single recurring host/narrator, no co-hosts or recurring guest segments found, talking-head video-essay format throughout; confirmed born and raised in San Mateo County, California
+
+- Baba Ram Dass
+    https://www.youtube.com/@BabaRamDassChannel
+    Archival channel of solo lectures/talks by Ram Dass (Richard Alpert), confirmed American, born in Boston in 1931, former Harvard psychologist; no co-hosts or guests, single speaker throughout
+
+- Sam Collins
+    https://www.youtube.com/@supraman38
+    Borderline - solo commentary/reaction channel on internet culture, distinct from his separate guest-heavy podcast channel; sources point to American origins (Boston, MA / Los Angeles)
+
+- World of Antiquity
+    https://www.youtube.com/@WorldofAntiquity
+    Added by user, kept as PASS per their own judgment. Info: solo host David Miano, American historian, lecture-style narration on ancient civilizations, no recurring guests found
+
+- toldinstone
+    https://www.youtube.com/@toldinstone
+    Added by user, kept as PASS per their own judgment. Info: solo host Garrett Ryan, American classicist with a PhD, narrates ancient Rome/Greece; interviews live on a separate channel
+
+- TastingHistory
+    https://www.youtube.com/@TastingHistory
+    Added by user, kept as PASS per their own judgment. Info: solo host Max Miller, American, born/raised Phoenix, Arizona, talking-head narration cooking historical recipes on camera
+
+- 3Blue1Brown
+    https://www.youtube.com/@3blue1brown
+    Added by user, kept as PASS per their own judgment. Info: solo creator Grant Sanderson, American, raised in Park City, Utah, continuous narration over math animations, no guests
+
+- StatQuest
+    https://www.youtube.com/@statquest
+    Added by user, kept as PASS per their own judgment. Info: solo host Josh Starmer, American, raised in North Carolina, educated at UNC, narrates alone with no guests
+
+- History for Granite
+    https://www.youtube.com/@HistoryforGRANITE
+    Added by user, kept as PASS per their own judgment. Info: solo host Douglas Rennie, American, narrates pyramid videos alone; occasional collabs happen but are infrequent, not interviews
+
+- Peter Santenello
+    https://www.youtube.com/@PeterSantenello
+    Added by user, kept as PASS per their own judgment. Info: American-born, but format leans interview-heavy - talks with a different local stranger in nearly every video
+
+======================================================================
+FAIL (75)
+======================================================================
+
+- Every Frame a Painting
+    https://www.youtube.com/@everyframeapainting
+    On-camera narrator Tony Zhou is Canadian, based in Vancouver, B.C.; no evidence of long-term US residency or a documented neutral American accent
+
+- StudioBinder
+    https://www.youtube.com/@StudioBinder
+    Identified narrator Paul Gregory is an Indian-born, British-trained Shakespearean actor, not a neutral American accent; also not a stable 1-4 person cast
+
+- The Book Leo
+    https://www.youtube.com/@TheBookLeo
+    Host Leonie Christel is Dutch, grew up in the Netherlands per multiple bio sources; no indication of US residency despite an otherwise solid solo format
+
+- BooksandLala
+    https://www.youtube.com/@BooksandLala
+    Host Kayla (Lala) is Canadian and lives in the Okanagan Valley in western Canada; no evidence of long-term US residency or documented neutral accent
+
+- Captured in Words
+    https://www.youtube.com/@CapturedInWords
+    Host Jay Kennedy was born and raised in British Columbia, Canada, and still appears based there; no evidence of long-term US residency or documented accent
+
+- The Money Guy Show
+    https://www.youtube.com/@MoneyGuyShow
+    Two American hosts (Brian Preston, Bo Hanson), otherwise fine, but the show runs a recurring biweekly guest segment plus other periodic guest interviews
+
+- Patrick Boyle
+    https://www.youtube.com/@PBoyle
+    Solo lecture-style host on the main channel, but he is Irish-born and based in London with a hedge fund/university career there; no US residency evidence
+
+- Ramit Sethi
+    https://www.youtube.com/@RamitSethi
+    Single recurring host with a clear American accent, born Sacramento, CA, but a large share of content is his 'Money For Couples' format with a different couple every episode
+
+- RAND
+    https://www.youtube.com/@TheRANDCorporation
+    Think-tank channel dominated by a rotating cast of different researchers and experts per video, plus outside interviews; not 1-4 recurring hosts regardless of accent
+
+- ColdFusion
+    https://www.youtube.com/@ColdFusion
+    Single narrator Dagogo Altraide, no recurring guests, but he was born in Mumbai and raised across India, Nigeria, Malta, and Scotland, settling in Perth, Australia
+
+- SciShow
+    https://www.youtube.com/@SciShow
+    Main channel rotates between at least 5 recurring hosts (Hank Green, Michael Aranda, Stefan Chin, Savannah Geary, Reid Reimers), exceeding the 1-4 speaker limit
+
+- Dr. Becky
+    https://www.youtube.com/@DrBecky
+    Solo host format with no rotating cast or frequent guests, but Becky Smethurst is a British astrophysicist based at the University of Oxford; no US residency
+
+- The Take
+    https://www.youtube.com/@TheTake
+    Credited as co-hosted by two people, but operates as a production shop that has historically used a rotating pool of freelance scriptwriters/narrators for its essays
+
+- Hello Future Me
+    https://www.youtube.com/@HelloFutureMe
+    Hosted solely by Timothy Hickson, a New Zealand writer based in New Zealand; no evidence of long-term US residency or a documented neutral American accent
+
+- OverSimplified
+    https://www.youtube.com/@OverSimplified
+    Single narrator Stuart Webster was born in Washington State but moved to and was raised in Lisburn, Northern Ireland during childhood; commonly noted British/Irish-inflected accent
+
+- Wireless Philosophy
+    https://www.youtube.com/@WirelessPhilosophy
+    Explicitly a multi-presenter educational project featuring rotating philosophy faculty from 40+ institutions worldwide - essentially a different guest presenter per video, not 1-4 recurring hosts
+
+- Bedtime Stories
+    https://www.youtube.com/@BedtimeStoriesChannel
+    Narrated primarily by creator/writer Richard While, who is English/British; the main recurring narrator's nationality is a hard fail despite an otherwise strong narration-focused format
+
+- That Chapter
+    https://www.youtube.com/@ThatChapter
+    Single-host true crime narration format is otherwise ideal, but host Mike Oh has confirmed he is Irish, born and living in Ireland his whole life
+
+- Lazy Masquerade
+    https://www.youtube.com/@LazyMasquerade
+    Single-speaker channel, fine on speaker count, but host Samuel Ayling is English, born and raised in Surrey, England, and commonly noted for his English accent
+
+- My First Million
+    https://www.youtube.com/@MyFirstMillionPod
+    Two regular American hosts (Sam Parr, Shaan Puri) with clear neutral accents, but the show frequently brings on prominent guests (Ray Dalio, Aaron Levie) as a recurring format
+
+- Psych2Go
+    https://www.youtube.com/@Psych2Go
+    Content is fully animated with voiceover narration rather than talking-head footage, weak on content style; confirmed narrator Amanda Silvera is Canadian, no US residency
+
+- Ali Abdaal
+    https://www.youtube.com/@aliabdaal
+    Single main host, fine on speaker count, but Ali Abdaal was born in Karachi, raised in Lesotho, and moved to the UK at age 9; British, not American
+
+- Huberman Lab
+    https://www.youtube.com/@hubermanlab
+    Andrew Huberman himself is American with a clear neutral accent, but roughly 65-70% of episodes are guest-interview format with a different named expert each time
+
+- Andrej Karpathy
+    https://www.youtube.com/@AndrejKarpathy
+    Confirmed born in Bratislava, Slovakia, with a degree from the University of Toronto (raised partly in Canada); no documented evidence of a recognized neutral American accent
+
+- Yannic Kilcher
+    https://www.youtube.com/@YannicKilcher
+    Swiss computer scientist with a PhD from ETH Zurich, not American by birth or upbringing - a hard fail regardless of how clear his English is
+
+- Jeff Su
+    https://www.youtube.com/@JeffSu
+    Originally from Hong Kong, moving to the US only for college (Emory University, graduated 2014); no source documenting a confirmed neutral American accent before or since
+
+- The Art Assignment
+    https://www.youtube.com/@theartassignment
+    Hosted by Sarah Urist Green, but the core format features a different guest artist presenting an 'assignment' nearly every episode - a recurring rotating guest structure
+
+- Rock N' Roll True Stories
+    https://www.youtube.com/@rnrtruestories
+    Sole host/narrator Sidd Masand is Indo-Canadian, described as growing up in Canada (and Ethiopia) to Indian immigrant parents; no evidence of US residency or accent
+
+- Iman Gadzhi
+    https://www.youtube.com/@ImanGadzhi
+    Born in Dagestan, Russia and raised in London from age 4; holds British nationality and was never raised in the US, despite an American-sounding delivery
+
+- GaryVee
+    https://www.youtube.com/@garyvee
+    Content mix blends solo Q&A with frequent guest interviews and podcast crossover appearances, past the 'once in a while' threshold; also has a distinctive NJ/Queens accent
+
+- Internet Historian
+    https://www.youtube.com/@InternetHistorian
+    Sole narrator is Anthony McCormack, a New Zealander reportedly now based in Australia, giving a non-American accent that's a hard fail regardless of the narration style
+
+- Peter McKinnon
+    https://www.youtube.com/@PeterMcKinnon
+    Canadian photographer/filmmaker; per the strict Canadian rule this is a hard fail by default since no evidence of long-term US residency or a documented American accent was found
+
+- See U in History / Mythology
+    https://www.youtube.com/@seeuinhistory
+    Could not identify any named host, on-camera presence, or documented nationality for the narrator despite multiple searches; likely a faceless channel with unconfirmed American accent
+
+- leena norms
+    https://www.youtube.com/@leenanorms
+    Solo host format is otherwise fine, but Leena Norms is British, from the Midlands, UK per her own bio; no evidence of long-term US residency
+
+- Benjamin McEvoy
+    https://www.youtube.com/@BenjaminMcEvoy
+    Solo host, speaking-focused lecture style, but he was born in Essex, England and is an Oxford graduate; confirms British nationality, not American, on his own site
+
+- Books and Things
+    https://www.youtube.com/@katiejlumsden
+    Solo host, talking-head book review format, but Katie Lumsden is based in London, England, studied at UK universities; no evidence of US residency to overturn the default fail
+
+- Marni Your Personal Wing Girl
+    https://www.youtube.com/@marnikinrys
+    Confirmed Canadian, born/raised Toronto; relocated to Southern California ~20+ years ago, satisfying US-residency, but no source documents her as having a recognized neutral American accent
+
+- Esther Perel
+    https://www.youtube.com/@estherperel
+    Confirmed Belgian-born/raised, an automatic accent/nationality hard fail; also independently fails on format since her flagship show features a different real couple every episode
+
+- Matthew Hussey
+    https://www.youtube.com/@thematthewhussey
+    Solo/primary host of his own channel, speaking-focused advice format, but he is British - born and raised in Essex, England - with a well-documented recognizable accent
+
+- Call Her Daddy
+    https://www.youtube.com/@callherdaddy
+    Host Alex Cooper is American with a neutral accent and the content is speaking-focused, but the show has shifted to a predominantly interview format with a different celebrity guest each episode
+
+- Linda Raynier
+    https://www.youtube.com/@LindaRaynier
+    Solo host, but Canadian - born and raised in Toronto to Vietnamese refugee parents, still appears Toronto-based; no evidence found of long-term US residency or documented accent
+
+- The Underworld Podcast
+    https://www.youtube.com/channel/UCaPBmfh3Dx84qKsUKNd5ZLg
+    Two hosts: Danny Gold is confirmed American, but regular co-host Sean Williams is a British writer based in Berlin; no evidence of long-term US residency
+
+- The Infographics Show
+    https://www.youtube.com/@TheInfographicsShow
+    Single narrator per video, but identity is murky - founder Andrej Preston is Slovenian-born, while a separate claimed voice actor's American nationality isn't solidly confirmed either
+
+- Mr. Nightmare
+    https://www.youtube.com/@mrnightmare
+    Single stable anonymous narrator, fine on format, but nationality is unresolved with conflicting low-quality bios - one claims American (NYC), another claims Canadian (Nova Scotia)
+
+- Kurzgesagt – In a Nutshell
+    https://www.youtube.com/@kurzgesagt
+    English-channel narrator is Steve Taylor, a hired voice actor born in Leamington Spa, Warwickshire, England; no evidence of long-term US residency or recognized American accent
+
+- AI Explained
+    https://www.youtube.com/@aiexplained-official
+    Pseudonymous host known only as 'Philip,' no public surname/nationality documentation found; his accent is widely perceived/discussed online as British, with no confirming American source
+
+- Kings and Generals
+    https://www.youtube.com/@KingsandGenerals
+    No interview/guest format, satisfying speaker count, but the channel's main narrator across nearly all videos, confirmed via IMDb credits, is British - a hard fail on accent
+
+- Mark Felton Productions
+    https://www.youtube.com/@MarkFeltonProductions
+    Confirmed British: Mark Felton was born in 1974 in Colchester, Essex, England and is the sole recurring host/narrator; single-speaker, narration-heavy format otherwise fits well
+
+- Invicta
+    https://www.youtube.com/@InvictaHistory
+    Documentary narration channel using hired voice-over talent; confirmed narrator Guy Michaels is explicitly described as recording with a naturally RP or South-East British accent
+
+- Smarthistory
+    https://www.youtube.com/@smarthistory-art-history
+    Content is speech-focused conversations discussing artworks, but Smarthistory is explicitly a large collaborative project with 503+ contributors, a rotating cast far beyond 1-4 recurring speakers
+
+- Manuel Bravo
+    https://www.youtube.com/@ManuelBravo
+    Solo creator who writes, records, animates, and edits himself, fine on speaker count and content style, but multiple sources confirm he is from Mexico City, Mexico
+
+- The Great American Western
+    https://www.youtube.com/@GreatAmericanWesterns
+    The channel regularly hosts a podcast/interview series directly on itself, featuring a different Western author, editor, or actor as guest each episode - a recurring guest format
+
+- The Rest Is History
+    https://www.youtube.com/@restishistorypod
+    Confirmed exactly two recurring speakers, Tom Holland and Dominic Sandbrook, fine on speaker count, but both hosts are British historians/broadcasters with no US residency
+
+- James Jani
+    https://www.youtube.com/@JamesJani
+    Solo documentary-style narrator, guest-free, which is fine on format, but multiple independent bios consistently identify him as an English/British YouTuber with no US residency evidence
+
+- Coin Bureau
+    https://www.youtube.com/@CoinBureau
+    Main channel is a solid solo talking-head explainer hosted by Guy Turner with no frequent guests, fine on speaker count, but Guy is British, UK-based, no US residency
+
+- Finematics
+    https://www.youtube.com/@Finematics
+    Narration-only format with a single consistent anonymous narrator identified only as 'Jakub,' no guests, but zero verifiable evidence of American nationality or accent was found
+
+- Paul Barron Network
+    https://www.youtube.com/@paulbarronnetwork
+    Explicitly an interview-driven media network across its crypto/tech/AI shows, described by its own material as featuring interviews with key experts each episode - a hard fail on guests
+
+- All About AI
+    https://www.youtube.com/@AllAboutAI
+    Sole regular speaker is Kristian Fagerlie with no co-hosts, fine on format, but he is Norwegian, born and raised in Sunndalsøra, Norway, still appears based there
+
+- Dwarkesh Patel
+    https://www.youtube.com/@DwarkeshPatel
+    Per Wikipedia the podcast consists exclusively of interviews rather than solo episodes, a different guest in nearly every episode; a hard fail on the guest-frequency criterion
+
+- Rachel and Jun
+    https://www.youtube.com/@RachelandJun
+    Two recurring co-hosts, fine on speaker count and content style, but while Rachel is American (Cincinnati, Ohio), regular co-host Jun is Japanese, born/raised and living in Japan
+
+- Asian Boss
+    https://www.youtube.com/@AsianBoss
+    Format is predominantly street-interview/vox-pop, meaning a different random interviewee carries most speaking time in nearly every video - a hard fail on speaker count alone
+
+- Blondie in China
+    https://www.youtube.com/@BlondieinChina
+    Solo host Amy Lyons carries her own vlog/talking-head videos, a good format fit, but she was born and raised in Sydney, Australia; long-term based in China, not the US
+
+- Simon Sinek
+    https://www.youtube.com/@simonsinek
+    Channel content is a substantial mix of solo keynote clips and a podcast featuring a different guest in nearly every episode, enough volume for a hard fail on guests
+
+- The School of Life
+    https://www.youtube.com/@theschooloflifetv
+    Signature narrated-essay videos consistently use one narrator, fine on speaker count, but that narrator is founder Alain de Botton, born in Zurich and raised/educated in the UK
+
+- Theo Von
+    https://www.youtube.com/@TheoVon
+    'This Past Weekend' is fundamentally a weekly guest-interview show, not a solo/co-host format - a different guest in virtually every episode, a hard fail on speaker count
+
+- Alex Cattoni
+    https://www.youtube.com/@AlexCattoni
+    Confirmed Canadian - grew up in Alberta, Canada, later settling in Vancouver, BC, where she's currently based; no evidence anywhere of long-term US residency or documented accent
+
+- Unbox Therapy
+    https://www.youtube.com/@unboxtherapy
+    Lewis Hilsenteger is confirmed Canadian, born in Toronto and per recent bios still residing in the Greater Toronto Area; no evidence of long-term US residency found
+
+- The Game Theorists
+    https://www.youtube.com/@GameTheory
+    Legacy host MatPat (2011-2024) was American and single-host, would have passed easily, but the current host since March 2024 is Tom Robinson, confirmed British
+
+- The Plain Bagel
+    https://www.youtube.com/@theplainbagel
+    Single host Richard Coffin with no guest/interview issues and solid talking-head finance content, but he is Canadian, currently based and working in Ottawa per his bios
+
+- Michelle Khare
+    https://www.youtube.com/@michellekhare
+    Michelle Khare is American, born Memphis, raised Louisiana, with a neutral accent and speaking-heavy narration, but 'Challenge Accepted' features a different expert/trainer prominently in nearly every episode
+
+- History Matters
+    https://www.youtube.com/@HistoryMatters
+    Single anonymous narrator doing narration-over-animation, fine on speaker count and speaking-focused style, but multiple sources confirm he is English/British, born in Peterborough, based in Leeds
+
+- Wisecrack
+    https://www.youtube.com/@WisecrackEDU
+    Historically operated more like a small network than a single show, with rotating presenters across sub-shows (Michael Burns, Jared Bauer, Greg Edwards, and others), well over the 4-speaker cap
+
+- Linus Tech Tips
+    https://www.youtube.com/@LinusTechTips
+    Videos regularly rotate through a large cast well beyond 4 recurring speakers (Linus, Riley, Alex, Anthony, Colton, and others); founder Linus Sebastian is also Canadian, born in Vancouver
+
+- Think Fast Talk Smart
+    https://www.youtube.com/@ThinkFastTalkSmart
+    Confirmed guest-interview format for essentially every episode - Stanford GSB's own description says host Matt Abrahams 'sits down with experts' each episode, a hard fail on guests
+
+- Fluent Forever
+    https://www.youtube.com/@FluentForeverApp
+    Video titles reveal multiple recurring presenters/language coaches beyond Gabriel Wyner, likely exceeding the 1-4 regular-speaker limit; also many clips teach phrases rather than sustained English speech

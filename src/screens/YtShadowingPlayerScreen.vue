@@ -341,8 +341,9 @@ import {
   YtShadowingEngine,
 } from '../engine/ytShadowingEngine.js'
 import { addToHistory, loadHistory, sendHistoryBeacon } from '../engine/ytHistory.js'
-import { fetchSubtitles, isNativeExpServerAvailable } from '../engine/nativeExpServerClient.js'
+import { fetchSubtitles, isNativeServerAvailable } from '../engine/nativeServerClient.js'
 import { openReferenceSite } from '../engine/externalDictionarySites.js'
+import { log } from '../engine/appLog.js'
 import { useRecordShadow } from '../composables/useRecordShadow.js'
 import { useShiftOrLongPress } from '../composables/useShiftOrLongPress.js'
 import { MicRecorderEngine } from '../engine/micRecorderEngine.js'
@@ -422,7 +423,7 @@ const {
 const PLAYBACK_POLL_MS = 100
 
 // Best-effort only: stays empty (and the CC button just does nothing
-// visible) if NativeExpServer isn't running - see nativeExpServerClient.js.
+// visible) if native-server isn't running - see nativeServerClient.js.
 // Only fetched lazily on the first "CC" click, then cached in subtitleCues
 // for the rest of the session - toggling off/on again never re-fetches.
 const subtitleCues = ref([])
@@ -667,16 +668,16 @@ function handleWordClick(token, event) {
 }
 
 async function loadSubtitlesIfAvailable() {
-  if (!(await isNativeExpServerAvailable())) {
-    console.log('[YT Shadowing] NativeExpServer not available, skipping subtitles')
+  if (!(await isNativeServerAvailable())) {
+    log('[YT Shadowing] native-server not available, skipping subtitles')
     return
   }
   const data = await fetchSubtitles(props.url, 'en')
   if (data) {
     subtitleCues.value = data.cues
-    console.log('[YT Shadowing] subtitleCues set, count:', data.cues.length)
+    log('[YT Shadowing] subtitleCues set, count:', data.cues.length)
   } else {
-    console.log('[YT Shadowing] no subtitles returned for', props.url)
+    log('[YT Shadowing] no subtitles returned for', props.url)
   }
 }
 
@@ -1045,7 +1046,7 @@ async function runAutoShadowByWindows() {
 // Prefers subtitle-cue lines over fixed windows: ensures subtitles are
 // fetched (silently - doesn't turn on the CC transcript/overlay) before
 // deciding, then falls back to fixed windows only if no cues are available
-// at all (NativeExpServer not running, or this video has no captions).
+// at all (native-server not reachable, or this video has no captions).
 async function handleAutoShadow() {
   if (isAutoShadowing.value) {
     shadowLoopStopRequested = true

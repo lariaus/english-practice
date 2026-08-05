@@ -209,16 +209,18 @@ fallback for arbitrary words/sentences is wanted.
 
 Given this is a personal, non-commercial, low-volume project, and the app
 already has a working pattern for exactly this kind of problem
-(`native-exp-server/` - a local companion server that does server-side
-fetching to sidestep CORS/ToS issues a pure client-side app would hit):
+(`native-server/` - the same local C++ server that serves the app itself
+also does server-side fetching to sidestep CORS/ToS issues a pure
+client-side app would hit, e.g. its existing `/subtitles` route):
 
 - **Definitions**: start with **Free Dictionary API** (dictionaryapi.dev) -
   zero setup, no key, and it already bundles phonetics/audio references. Its
   single-maintainer reliability risk is the main downside; if that becomes a
   problem, **WordNet via NLTK** is a strong fallback since it's a local
   dataset with no rate limit and the most permissive license of anything
-  surveyed - it would fit naturally as another NativeExpServer endpoint,
-  same pattern as the existing `/subtitles` route.
+  surveyed - though it would need a C++ (not Python) implementation to fit
+  natively into `native-server`, following the same pattern used for
+  YouTube caption fetching.
 - **Pronunciation audio, real (non-robotic) American English specifically**:
   **Merriam-Webster's Collegiate Dictionary with Audio** is the strongest
   fit given the explicit ask - real recorded speech, ~111,000 entries,

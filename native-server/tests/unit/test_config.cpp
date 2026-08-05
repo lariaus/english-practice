@@ -29,8 +29,7 @@ TEST_CASE("resolveConfig throws when no directory is resolvable", "[config]") {
 }
 
 TEST_CASE("resolveConfig reads host/port/dir from env vars", "[config]") {
-  auto env =
-      makeEnv({{"HOST", "127.0.0.1"}, {"PORT", "9000"}, {"NATIVE_SERVER_DIR", "/srv/dist"}});
+  auto env = makeEnv({{"HOST", "127.0.0.1"}, {"PORT", "9000"}, {"NATIVE_SERVER_DIR", "/srv/dist"}});
   auto config = native_server_cli::resolveConfig({}, env);
   REQUIRE(config.host == "127.0.0.1");
   REQUIRE(config.port == 9000);
@@ -38,8 +37,7 @@ TEST_CASE("resolveConfig reads host/port/dir from env vars", "[config]") {
 }
 
 TEST_CASE("resolveConfig CLI flags take precedence over env vars", "[config]") {
-  auto env =
-      makeEnv({{"HOST", "127.0.0.1"}, {"PORT", "9000"}, {"NATIVE_SERVER_DIR", "/srv/dist"}});
+  auto env = makeEnv({{"HOST", "127.0.0.1"}, {"PORT", "9000"}, {"NATIVE_SERVER_DIR", "/srv/dist"}});
   auto config = native_server_cli::resolveConfig(
       {"--host", "0.0.0.0", "--port", "8080", "--dir", "/other"}, env);
   REQUIRE(config.host == "0.0.0.0");
@@ -61,4 +59,24 @@ TEST_CASE("resolveConfig rejects an unknown flag", "[config]") {
   auto env = makeEnv({});
   REQUIRE_THROWS_AS(native_server_cli::resolveConfig({"--dir", "/tmp", "--bogus"}, env),
                      native_server_cli::ConfigError);
+}
+
+TEST_CASE("resolveConfig defaults dataDir to .app_data", "[config]") {
+  auto env = makeEnv({});
+  auto config = native_server_cli::resolveConfig({"--dir", "/tmp"}, env);
+  REQUIRE(config.dataDir == ".app_data");
+}
+
+TEST_CASE("resolveConfig reads dataDir from NATIVE_SERVER_DATA_DIR", "[config]") {
+  auto env = makeEnv({{"NATIVE_SERVER_DATA_DIR", "/srv/data"}});
+  auto config = native_server_cli::resolveConfig({"--dir", "/tmp"}, env);
+  REQUIRE(config.dataDir == "/srv/data");
+}
+
+TEST_CASE("resolveConfig --data-dir takes precedence over NATIVE_SERVER_DATA_DIR",
+          "[config]") {
+  auto env = makeEnv({{"NATIVE_SERVER_DATA_DIR", "/srv/data"}});
+  auto config =
+      native_server_cli::resolveConfig({"--dir", "/tmp", "--data-dir", "/other/data"}, env);
+  REQUIRE(config.dataDir == "/other/data");
 }

@@ -31,22 +31,28 @@
 
     <p v-if="testStatus === 'success'" class="test-message test-success">✓ Connected</p>
     <p v-if="testStatus === 'error'" class="test-message test-error">✗ Could not reach server</p>
+
+    <button class="logs-link" @click="$emit('open-logs')">Logs</button>
   </main>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { getSyncServerUrl, setSyncServerUrl } from '../engine/syncConfig.js'
 
-defineEmits(['back'])
+defineEmits(['back', 'open-logs'])
 
-const serverUrl = ref(getSyncServerUrl())
+const serverUrl = ref('')
 const saved = ref(false)
 const testStatus = ref(null) // null | 'testing' | 'success' | 'error'
 
-function handleSave() {
-  setSyncServerUrl(serverUrl.value)
-  serverUrl.value = getSyncServerUrl()
+onMounted(async () => {
+  serverUrl.value = await getSyncServerUrl()
+})
+
+async function handleSave() {
+  await setSyncServerUrl(serverUrl.value)
+  serverUrl.value = await getSyncServerUrl()
   saved.value = true
   setTimeout(() => {
     saved.value = false
@@ -146,5 +152,16 @@ async function handleTest() {
 
 .test-error {
   color: var(--record);
+}
+
+.logs-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 </style>

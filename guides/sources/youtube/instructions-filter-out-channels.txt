@@ -1,0 +1,40 @@
+I'm trying to find YouTube channels with great content for shadowing.
+
+I already have a list of YouTube channels, but I don't know if they're good or not.
+
+I have a list of criteria to judge whether a channel is great or not. I want you to go through all the channels in my list (use sub-agents, maybe each agent handles 5 channels, one by one) and tell me whether it thinks each one fits.
+
+The AI might not be able to tell for certain whether a channel fits all the criteria, but I want you to filter out all the ones you're sure aren't good. I'll be the final judge in the end.
+
+Here are the criteria (from most to least important):
+
+- Between 1 and 4 regular speakers, not more. No interviews / guests (for 90%+ of videos; guests once in a while is fine). "Once in a while" means rare/occasional — a channel that frequently brings on guests (e.g. a recurring guest segment, or a different guest every episode/week) is a hard fail on this criterion, even if it also has regular hosts.
+- All the speakers must be American and speak with a very clear, neutral American accent. Bonus points if they are great speakers. If a speaker was born or raised outside the US (even partly), that's a hard fail by default — the only exception is if you can confirm they've actually lived in the US long-term AND are recognized/documented as having a neutral American accent. Don't give the benefit of the doubt on mixed-origin cases; require actual evidence for the exception, not just "presumably fine" or "close to neutral."
+  - This applies to Canadians too (I'm being strict about this for now, may reconsider later): Canadian is a hard no by default, unless there's confirmation they've lived in the US long-term, or a clear indication they have a neutral American accent (not just "close to neutral" or "hard to distinguish").
+- Content focused more on speaking (not too many wordless / action-only scenes).
+- Avoid very short videos (if 90%+ of videos are under 3 minutes, this channel is not for me).
+- Should preferably have many videos (if it has fewer than 10 videos total, it's not worth it).
+
+By the way, a few things about my list: it's very raw, I might have duplicates (remove them first), and some entries might not even be YouTube channels (maybe just the name of someone without a channel).
+
+The very first step will be to build a list of unique YouTube channels with their links, and let me know when that's done before going further.
+
+The output must be a CSV of channel title and channel link. All links must be unique and verified.
+
+Once this is done, show me the CSV, before I ask you to move to step 2, which is having sub-agents verify all the criteria for the channels (as mentioned above).
+The output, again, is a final CSV, filtered down to only the channels you think may fit all my criteria.
+
+Step 3 will be me going through all remaining channels manually and checking which ones really fit.
+
+By the way, I recommend building and using Python scripts as much as possible to automate this process (at least for things like verifying whether a YouTube channel link is broken, fetching videos, etc.).
+You can put the scripts in that directory and update the doc.
+
+For criteria that can't be checked by script (accent, speaker count, guest frequency, speaking vs. visual content), use web search, comments, or any other source of information you can find. The goal is to discard channels you're confident don't fit the criteria — I'll be the final judge on the rest.
+
+When researching each channel, go a bit deeper than a single quick search — check a couple of sources (e.g. the channel's About page, a Wikipedia/interview mention, a video title or two, viewer comments) before settling on a verdict, especially for the accent/nationality and guest-frequency criteria. Don't go overboard chasing certainty on every single channel, but don't settle for a surface-level guess either — enough digging to have real grounds for the verdict.
+
+Don't install or build the scripts yet — that will come later.
+
+Step 2 output format: one file, step2-channel-verdicts.csv, with columns Channel Title, Channel Link, Verdict, Reason. Verdict is only ever PASS or FAIL — no "PASS (borderline)" or similar. If a channel is a borderline/uncertain case, still mark it PASS, but say so in the Reason (e.g. "borderline - ..."), so I can review it in step 3. Also generate a more readable step2-channel-verdicts.txt from that CSV (grouped into a PASS section and a FAIL section, one channel per entry with its link and reason) — use/update build_verdicts_txt.py for this so the two files stay in sync whenever the CSV changes.
+
+The Reason field must be 20-25 words — not 10, not 40. Check the actual word count before finalizing (e.g. by running each Reason through a quick word-count script) rather than eyeballing it, since it's easy to drift short or long. One flowing clause is fine, doesn't need to be 2 full sentences. Example of the right length (24 words): "Solo host, speaking-focused lecture style, but he was born in Essex, England and is an Oxford graduate; confirms British nationality, not American." Too short (10 words, NOT this): "Solo host, British — raised in Essex, no US residency."

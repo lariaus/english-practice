@@ -104,7 +104,8 @@ it's gone.
 
 ## Data sources
 
-Deliberately **independent of NativeExpServer** - `dictionaryClient.js`
+Deliberately **independent of native-server's caption fetching** -
+`dictionaryClient.js`
 fetches directly from the free, keyless Free Dictionary API
 (`api.dictionaryapi.dev`) client-side, with an in-memory cache so repeat
 lookups of the same word never re-fetch.

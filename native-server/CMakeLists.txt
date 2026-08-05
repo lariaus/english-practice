@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
 project(native_server LANGUAGES CXX)
 
+# https_client wraps NSURLSession (Objective-C++) - Apple-only, no Linux
+# support from here on (accepted - see docs/migration-to-offline-app/step-4.md).
+if(APPLE)
+  enable_language(OBJCXX)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -33,6 +39,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
+FetchContent_Declare(
+  pugixml
+  GIT_REPOSITORY https://github.com/zeux/pugixml.git
+  GIT_TAG v1.16
+  GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(pugixml)
+
 if(NATIVE_SERVER_BUILD_TESTS)
   FetchContent_Declare(
     Catch2
@@ -43,6 +57,9 @@ if(NATIVE_SERVER_BUILD_TESTS)
   FetchContent_MakeAvailable(Catch2)
 endif()
 
+add_subdirectory(https_client)
+add_subdirectory(youtube_utils)
+add_subdirectory(storage_map)
 add_subdirectory(native_server_core)
 add_subdirectory(native_server_cli_lib)
 add_subdirectory(native_server_cli)

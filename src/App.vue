@@ -6,7 +6,13 @@
     @open-dictionary="handleOpenDictionary"
   />
 
-  <SettingsScreen v-else-if="screen.name === 'settings'" @back="goHome" />
+  <SettingsScreen
+    v-else-if="screen.name === 'settings'"
+    @back="goHome"
+    @open-logs="goToLogs"
+  />
+
+  <LogsScreen v-else-if="screen.name === 'logs'" @back="goToSettings" />
 
   <DurationPickerScreen
     v-else-if="screen.name === 'recorder-loop-duration'"
@@ -52,6 +58,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import HomeScreen from './screens/HomeScreen.vue'
 import SettingsScreen from './screens/SettingsScreen.vue'
+import LogsScreen from './screens/LogsScreen.vue'
 import DurationPickerScreen from './screens/DurationPickerScreen.vue'
 import RecorderLoopSessionScreen from './screens/RecorderLoopSessionScreen.vue'
 import RobotShadowingSessionScreen from './screens/RobotShadowingSessionScreen.vue'
@@ -117,6 +124,10 @@ function goHome() {
 
 function goToSettings() {
   screen.value = { name: 'settings' }
+}
+
+function goToLogs() {
+  screen.value = { name: 'logs' }
 }
 
 function goToRecorderDurationPicker() {
