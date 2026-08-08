@@ -343,6 +343,7 @@ import {
 import { addToHistory, loadHistory, sendHistoryBeacon } from '../engine/ytHistory.js'
 import { fetchSubtitles, isNativeServerAvailable } from '../engine/nativeServerClient.js'
 import { openReferenceSite } from '../engine/externalDictionarySites.js'
+import { cleanWord, isClickableWord, splitIntoWords } from '../engine/wordTokenizer.js'
 import { log } from '../engine/appLog.js'
 import { useRecordShadow } from '../composables/useRecordShadow.js'
 import { useShiftOrLongPress } from '../composables/useShiftOrLongPress.js'
@@ -640,22 +641,10 @@ function handleCaptureFromSelection() {
 // it's open, same as before, just sourced globally instead of locally.
 const isDictionaryOpen = computed(() => props.dictionaryOpen)
 
-// Splits a cue's text into alternating word/whitespace-and-punctuation
-// tokens, keeping every token (including separators) so the line can be
-// re-rendered with exact original spacing - only the word tokens become
-// individually clickable.
-function splitIntoWords(text) {
-  return text.split(/(\s+)/)
-}
-
-function isClickableWord(token) {
-  return /\w/.test(token)
-}
-
 function handleWordClick(token, event) {
   if (wordClickDisabled.value) return
 
-  const cleaned = token.replace(/^[^\w']+|[^\w']+$/g, '')
+  const cleaned = cleanWord(token)
   if (!cleaned) return
 
   if (event?.shiftKey) {
@@ -1555,33 +1544,8 @@ function handleBack() {
   width: 100%;
 }
 
-/* Puts the back button on the same row as the title instead of the shared
-   .back-button's normal floating-above-everything corner position (see
-   style.css) - overridden only here, scoped to this screen, so every other
-   screen keeps that original layout untouched. Same 1fr/auto/1fr trick as
-   .video-bar-row below: the title stays visually centered regardless of the
-   back button's width, balanced by the empty spacer on the other side. */
-.screen-header {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-}
-
-.screen-header .back-button {
-  position: static;
-  justify-self: start;
-  padding: 0.5rem;
-}
-
-.screen-header h1 {
-  justify-self: center;
-}
-
-.screen-header-spacer {
-  justify-self: end;
-}
+/* .screen-header (back button + title on one row) now lives in style.css,
+   shared with Flashcards' Practice screen. */
 
 .player-and-transcript {
   display: flex;

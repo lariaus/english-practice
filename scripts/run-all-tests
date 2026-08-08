@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# Runs every test suite in this repo one by one, printing a pass/fail
+# summary per suite. Exits 0 only if all of them passed.
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$REPO_ROOT"
+
+FAILED=""
+
+run_suite() {
+    name="$1"
+    shift
+    echo "==> $name"
+    if "$@"; then
+        echo "==> $name: PASSED"
+    else
+        echo "==> $name: FAILED"
+        FAILED="$FAILED $name"
+    fi
+    echo
+}
+
+run_suite "vite" npm test
+run_suite "cloudflare worker" npm run worker:test
+run_suite "native-server" sh -c 'cmake --build native-server/build -j && ctest --test-dir native-server/build --output-on-failure'
+run_suite "english-practice (Xcode)" xcodebuild -quiet test -project "english-practice-app/English Practice.xcodeproj" -scheme "English Practice" -destination "platform=macOS"
+
+if [ -n "$FAILED" ]; then
+    echo "Failed suites:$FAILED"
+    exit 1
+fi
+
+echo "All test suites passed."

@@ -21,6 +21,9 @@ cmake -S native-server -B native-server/build -DCMAKE_BUILD_TYPE=Release
 Build and run frontend and server:
 
 ```sh
+# Only needed if cloudflare-worker/src/**.js changed since your last deploy:
+npx wrangler deploy --config cloudflare-worker/wrangler.jsonc
+
 npm run build
 cmake --build native-server/build -j
 native-server/build/native_server_cli/native_server_cli --dir "$(pwd)/dist" --port 8000
@@ -38,6 +41,39 @@ Use Cloudfare tunneling to test on ios (requires HTTPS):
 
 ```sh
 cloudflared tunnel --url http://localhost:8000
+```
+
+## Testing
+
+Run everything at once (exits 0 only if all suites pass):
+
+```sh
+./scripts/run-all-tests
+```
+
+Run vite tests:
+
+```sh
+npm test
+```
+
+Run cloudflare worker tests:
+
+```sh
+npm run worker:test
+```
+
+Run native-server tests:
+
+```sh
+cmake --build native-server/build -j
+ctest --test-dir native-server/build --output-on-failure
+```
+
+Run english-practice tests:
+
+```sh
+xcodebuild -quiet test -project "english-practice-app/English Practice.xcodeproj" -scheme "English Practice" -destination "platform=macOS"
 ```
 
 ## Get Sync Server URL

@@ -3,5 +3,8 @@
   "name": "english-practice-sync",
   "main": "src/index.js",
   "compatibility_date": "2026-07-27",
-  "kv_namespaces": [{ "binding": "HISTORY", "id": "6d69e7a0aa6649b1af9bc36de71f53ad" }]
+  "kv_namespaces": [
+    { "binding": "HISTORY", "id": "6d69e7a0aa6649b1af9bc36de71f53ad" },
+    { "binding": "FLASHCARDS", "id": "db03fa7a884e41899e4af3201300eab8" }
+  ]
 }

@@ -47,11 +47,53 @@
     @show-word="handleShowWord"
   />
 
+  <FlashcardsSetPickerScreen
+    v-else-if="screen.name === 'flashcards-set-picker'"
+    @back="goHome"
+    @select-set="onSelectFlashcardsSet"
+  />
+
+  <FlashcardsLearnScreen
+    v-else-if="screen.name === 'flashcards-learn'"
+    :set-name="screen.setName"
+    :dictionary-open="dictionaryOpen"
+    @back="goToFlashcardsEdit"
+    @show-word="handleShowWord"
+  />
+
+  <FlashcardsReviewScreen
+    v-else-if="screen.name === 'flashcards-review'"
+    :set-name="screen.setName"
+    :dictionary-open="dictionaryOpen"
+    @back="goToFlashcardsEdit"
+    @show-word="handleShowWord"
+  />
+
+  <FlashcardsPracticeScreen
+    v-else-if="screen.name === 'flashcards-practice'"
+    :set-name="screen.setName"
+    :dictionary-open="dictionaryOpen"
+    @back="goToFlashcardsEdit"
+    @show-word="handleShowWord"
+  />
+
+  <FlashcardsEditScreen
+    v-else-if="screen.name === 'flashcards-edit'"
+    :set-name="screen.setName"
+    @back="goToFlashcardsSetPicker"
+    @learn="onFlashcardsAction('flashcards-learn')"
+    @review="onFlashcardsAction('flashcards-review')"
+    @practice="onFlashcardsAction('flashcards-practice')"
+  />
+
   <!-- Global, single instance - deliberately outside the screen v-if/else-if
        chain above so it can overlay any screen, triggered from the Home
        menu, a transcript word click (relayed up via @show-word), or the
        app-wide keyboard shortcut below. See docs/dictionary-spec.md. -->
   <DictionaryPopup ref="dictionaryPopupRef" />
+
+  <!-- Also global/single-instance - see composables/useToast.js. -->
+  <ToastHost />
 </template>
 
 <script setup>
@@ -64,7 +106,13 @@ import RecorderLoopSessionScreen from './screens/RecorderLoopSessionScreen.vue'
 import RobotShadowingSessionScreen from './screens/RobotShadowingSessionScreen.vue'
 import YtShadowingFormScreen from './screens/YtShadowingFormScreen.vue'
 import YtShadowingPlayerScreen from './screens/YtShadowingPlayerScreen.vue'
+import FlashcardsSetPickerScreen from './screens/FlashcardsSetPickerScreen.vue'
+import FlashcardsLearnScreen from './screens/FlashcardsLearnScreen.vue'
+import FlashcardsReviewScreen from './screens/FlashcardsReviewScreen.vue'
+import FlashcardsPracticeScreen from './screens/FlashcardsPracticeScreen.vue'
+import FlashcardsEditScreen from './screens/FlashcardsEditScreen.vue'
 import DictionaryPopup from './components/DictionaryPopup.vue'
+import ToastHost from './components/ToastHost.vue'
 
 const screen = ref({ name: 'home' })
 
@@ -107,6 +155,8 @@ function onSelectTool(toolId) {
     screen.value = { name: 'robot-shadowing-session' }
   } else if (toolId === 'yt-shadowing') {
     screen.value = { name: 'yt-shadowing-form' }
+  } else if (toolId === 'flashcards') {
+    screen.value = { name: 'flashcards-set-picker' }
   }
 }
 
@@ -116,6 +166,24 @@ function onSelectRecorderDuration(seconds) {
 
 function onLoadYtVideo({ videoId, url }) {
   screen.value = { name: 'yt-shadowing-player', videoId, url }
+}
+
+function onSelectFlashcardsSet(setName) {
+  screen.value = { name: 'flashcards-edit', setName }
+}
+
+// One handler shared by all four Flashcards sub-modes - each just needs the
+// current setName carried along, so there's no per-mode logic to branch on.
+function onFlashcardsAction(screenName) {
+  screen.value = { name: screenName, setName: screen.value.setName }
+}
+
+function goToFlashcardsSetPicker() {
+  screen.value = { name: 'flashcards-set-picker' }
+}
+
+function goToFlashcardsEdit() {
+  screen.value = { name: 'flashcards-edit', setName: screen.value.setName }
 }
 
 function goHome() {

@@ -86,6 +86,21 @@
         </button>
       </li>
       <li>
+        <button
+          class="tool-button"
+          @click="$emit('select-tool', 'flashcards')"
+        >
+          <span class="tool-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="6" width="15" height="11" rx="2" stroke="white" stroke-width="2" />
+              <rect x="6" y="3" width="15" height="11" rx="2" stroke="white" stroke-width="2" opacity="0.5" />
+            </svg>
+          </span>
+          <span class="tool-label">Flashcards</span>
+          <span class="tool-chevron">›</span>
+        </button>
+      </li>
+      <li>
         <!-- Doesn't navigate anywhere - opens the dictionary as a popup
              overlay on top of this same screen (see docs/dictionary-spec.md),
              unlike the three tools above which switch to a whole new

@@ -8,14 +8,18 @@
     "build": "vite build",
     "preview": "vite preview",
     "worker:dev": "wrangler dev --config cloudflare-worker/wrangler.jsonc",
-    "worker:deploy": "wrangler deploy --config cloudflare-worker/wrangler.jsonc"
+    "worker:deploy": "wrangler deploy --config cloudflare-worker/wrangler.jsonc",
+    "worker:test": "vitest run --config cloudflare-worker/vitest.config.js",
+    "test": "vitest run"
   },
   "dependencies": {
     "vue": "^3.4.21"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.20.2",
     "@vitejs/plugin-vue": "^5.0.4",
     "vite": "^5.2.8",
+    "vitest": "^4.1.10",
     "wrangler": "^4.114.0"
   }
 }

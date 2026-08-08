@@ -18,19 +18,11 @@
 			remoteGlobalIDString = B0FAB8ED301FB4F000B2342F;
 			remoteInfo = "English Practice";
 		};
-		B0FAB90A301FB4F100B2342F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = B0FAB8E6301FB4F000B2342F /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = B0FAB8ED301FB4F000B2342F;
-			remoteInfo = "English Practice";
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		B0FAB8EE301FB4F000B2342F /* English Practice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "English Practice.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0FAB8FF301FB4F100B2342F /* English PracticeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "English PracticeTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		B0FAB909301FB4F100B2342F /* English PracticeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "English PracticeUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CA1100000000000000000002 /* dist */ = {isa = PBXFileReference; lastKnownFileType = folder; name = dist; path = ../dist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -62,13 +54,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B0FAB906301FB4F100B2342F /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -87,7 +72,6 @@
 			children = (
 				B0FAB8EE301FB4F000B2342F /* English Practice.app */,
 				B0FAB8FF301FB4F100B2342F /* English PracticeTests.xctest */,
-				B0FAB909301FB4F100B2342F /* English PracticeUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -141,26 +125,6 @@
 			productReference = B0FAB8FF301FB4F100B2342F /* English PracticeTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		B0FAB908301FB4F100B2342F /* English PracticeUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = B0FAB919301FB4F100B2342F /* Build configuration list for PBXNativeTarget "English PracticeUITests" */;
-			buildPhases = (
-				B0FAB905301FB4F100B2342F /* Sources */,
-				B0FAB906301FB4F100B2342F /* Frameworks */,
-				B0FAB907301FB4F100B2342F /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				B0FAB90B301FB4F100B2342F /* PBXTargetDependency */,
-			);
-			name = "English PracticeUITests";
-			packageProductDependencies = (
-			);
-			productName = "English PracticeUITests";
-			productReference = B0FAB909301FB4F100B2342F /* English PracticeUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -175,10 +139,6 @@
 						CreatedOnToolsVersion = 16.2;
 					};
 					B0FAB8FE301FB4F100B2342F = {
-						CreatedOnToolsVersion = 16.2;
-						TestTargetID = B0FAB8ED301FB4F000B2342F;
-					};
-					B0FAB908301FB4F100B2342F = {
 						CreatedOnToolsVersion = 16.2;
 						TestTargetID = B0FAB8ED301FB4F000B2342F;
 					};
@@ -200,7 +160,6 @@
 			targets = (
 				B0FAB8ED301FB4F000B2342F /* English Practice */,
 				B0FAB8FE301FB4F100B2342F /* English PracticeTests */,
-				B0FAB908301FB4F100B2342F /* English PracticeUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -215,13 +174,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B0FAB8FD301FB4F100B2342F /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		B0FAB907301FB4F100B2342F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -267,13 +219,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		B0FAB905301FB4F100B2342F /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -281,11 +226,6 @@
 			isa = PBXTargetDependency;
 			target = B0FAB8ED301FB4F000B2342F /* English Practice */;
 			targetProxy = B0FAB900301FB4F100B2342F /* PBXContainerItemProxy */;
-		};
-		B0FAB90B301FB4F100B2342F /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = B0FAB8ED301FB4F000B2342F /* English Practice */;
-			targetProxy = B0FAB90A301FB4F100B2342F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -550,48 +490,6 @@
 			};
 			name = Release;
 		};
-		B0FAB91A301FB4F100B2342F /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "lariaus.english-practice-appUITests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_TARGET_NAME = "English Practice";
-				XROS_DEPLOYMENT_TARGET = 2.2;
-			};
-			name = Debug;
-		};
-		B0FAB91B301FB4F100B2342F /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "lariaus.english-practice-appUITests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_TARGET_NAME = "English Practice";
-				XROS_DEPLOYMENT_TARGET = 2.2;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -618,15 +516,6 @@
 			buildConfigurations = (
 				B0FAB917301FB4F100B2342F /* Debug */,
 				B0FAB918301FB4F100B2342F /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		B0FAB919301FB4F100B2342F /* Build configuration list for PBXNativeTarget "English PracticeUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B0FAB91A301FB4F100B2342F /* Debug */,
-				B0FAB91B301FB4F100B2342F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

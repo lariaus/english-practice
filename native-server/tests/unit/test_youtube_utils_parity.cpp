@@ -16,7 +16,7 @@ namespace {
 // committed - see .gitignore/YOUTUBE_UTILS_PARITY_FIXTURES_DIR) by
 // shelling out to generate_youtube_parity_fixture.py whenever the cached
 // file is missing, or unconditionally if REGENERATE_PYTHON_REF_DATA is
-// set. See docs/migration-to-offline-app/step-4.md.
+// set. See native-server/README.md.
 nlohmann::json loadOrRegenerateFixture(const std::string& videoId) {
   std::filesystem::path dir(YOUTUBE_UTILS_PARITY_FIXTURES_DIR);
   std::filesystem::path path = dir / (videoId + ".json");

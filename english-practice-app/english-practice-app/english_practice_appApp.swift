@@ -21,7 +21,7 @@ struct english_practice_appApp: App {
             // Application Support - same API on macOS and iOS, sandboxed,
             // persists across launches, not created automatically (must
             // mkdir ourselves). Backs /storage/maps/... - see
-            // docs/migration-to-offline-app/step-9.md.
+            // docs/local-storage.md.
             guard let supportDir = FileManager.default.urls(
                 for: .applicationSupportDirectory, in: .userDomainMask
             ).first else { return }

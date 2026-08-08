@@ -6,17 +6,20 @@ composable/component rather than being reimplemented per screen. This doc
 catalogs those shared patterns so future work reaches for them first,
 instead of rebuilding something that already exists.
 
-**Currently in use by**: `YtShadowingPlayerScreen.vue` and `DictionaryPopup.vue`
-(the latter is a single global instance owned by `App.vue` - see "Modal
-popups" below - reachable from anywhere, not just YT Shadowing). Recorder
-Loop and Robot Shadowing predate this work and
-are built around their own hands-free, countdown-driven record→playback
-cycles (`recorderLoopEngine.js`, `robotShadowingEngine.js`) rather than a
-manually-toggled Record/Shadow pair - that's a deliberate difference in
-those tools' design (see their own spec docs), not a gap to backfill. Any
-*new* tool/screen that needs manual record/playback controls, a play/pause
-toggle, or clickable text should reach for the pieces below rather than
-writing a new bespoke version.
+**Currently in use by**: `YtShadowingPlayerScreen.vue`, `DictionaryPopup.vue`
+(a single global instance owned by `App.vue` - see "Modal popups" below -
+reachable from anywhere, not just YT Shadowing), and Flashcards' three
+session screens (Learn/Review/Practice, via `useFlashcardFaceAudio.js` -
+two independent instances per screen, one for the front's text and one for
+the back's, plain TTS instead of a real pronunciation clip - see
+`flashcards-spec.md`). Recorder Loop and Robot Shadowing predate this work
+and are built around their own hands-free, countdown-driven
+record→playback cycles (`recorderLoopEngine.js`, `robotShadowingEngine.js`)
+rather than a manually-toggled Record/Shadow pair - that's a deliberate
+difference in those tools' design (see their own spec docs), not a gap to
+backfill. Any *new* tool/screen that needs manual record/playback controls,
+a play/pause toggle, or clickable text should reach for the pieces below
+rather than writing a new bespoke version.
 
 ## Play / Record / Shadow buttons
 
@@ -86,6 +89,10 @@ neither has a transcript or phrase list on screen (Robot Shadowing
 deliberately keeps its phrase hidden, by design, as part of the
 listen-and-repeat exercise), so there's nothing to click yet in either.
 
+Flashcards' front/back words are also clickable (same dictionary-popup
+destination as transcript words), but deliberately **without** a
+shift-click alternate - plain click only, see `flashcards-spec.md`.
+
 ## Modal popups
 
 A modal (currently just `DictionaryPopup.vue`) isn't done just by rendering
@@ -131,6 +138,32 @@ the first time around:
   provably confined to a single screen, rather than discovering the need to
   hoist it later.
 
+## Toast notifications
+
+For a brief, non-critical message - a network error, or an FYI that
+doesn't need acknowledgment - a **toast** (`useToast.js`'s `showToast()` +
+`ToastHost.vue`, mounted once globally in `App.vue`, same shape as
+`DictionaryPopup.vue` above) is usually the right call: a small dark pill
+near the bottom of the screen that fades in, holds for a few seconds, then
+fades out on its own, no tap-to-dismiss needed. `showToast(message,
+{type: 'error'})` is callable from anywhere - any component or plain `.js`
+module - with no ref/prop-drilling needed, since it's backed by one shared
+reactive queue rather than a per-screen instance.
+
+- **What it's for**: something transient happened (an action just failed
+  or succeeded) that the user should notice but doesn't need to keep
+  looking at - a failed network request being the most common case (e.g. a
+  mutating Flashcards call failing while offline), but equally fine for a
+  small non-error FYI.
+- **What it's not for**: an error that leaves the screen with nothing
+  useful to show (e.g. the initial data load for a whole screen failed) -
+  that still deserves a permanent, visible explanation instead of
+  something that quietly disappears in a few seconds. Keep using a plain
+  persistent `error-message` for that case.
+- Not (yet) a wholesale replacement for every screen's existing
+  `error-message` paragraph - adopted incrementally, starting with
+  Flashcards' action failures, not retrofitted everywhere at once.
+
 ## Online shared storage
 
 Some data is small, changes over time, and is worth keeping in sync across
@@ -161,6 +194,19 @@ local copy that never agrees with the others.
   the request fails. This kind of sync should never be required for a
   feature to work, only something that improves it when available.
 
+## Local (per-device) storage
+
+The counterpart to "Online shared storage" above: small settings/state
+that's fine being device-specific (not synced) still shouldn't be
+scattered as one-off `localStorage.getItem`/`setItem` calls per feature.
+`StorageMap` (`src/engine/storageMap.js`) gives that shape of data a
+single key→JSON-value client, backed by `native-server` where available
+and falling back to `localStorage` only when no server is reachable at
+all - see `docs/local-storage.md` for the full design. Not heavily used
+yet (one setting so far - the sync server URL, `syncConfig.js`), but the
+place to reach for next time rather than writing another bespoke
+`localStorage` call.
+
 ## File map
 
 - `src/composables/useShiftOrLongPress.js`
@@ -173,6 +219,10 @@ local copy that never agrees with the others.
   `src/screens/YtShadowingPlayerScreen.vue` (opens it via `emit('show-word')`),
   `src/screens/HomeScreen.vue` (opens search mode via `emit('open-dictionary')`)
   - see `docs/dictionary-spec.md` for the full picture
+- `src/composables/useToast.js`, `src/components/ToastHost.vue` (globally
+  mounted once in `App.vue`)
 - `cloudflare-worker/` (the Worker + KV backend), `src/engine/syncConfig.js`
   (the shared Worker-URL setting), `src/screens/SettingsScreen.vue` (where
   it's entered) - see `docs/setup-cloudflare.md` for setup
+- `src/engine/storageMap.js` (local, per-device key-value client) - see
+  `docs/local-storage.md`

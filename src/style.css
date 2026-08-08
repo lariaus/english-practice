@@ -99,6 +99,12 @@ body {
   transform: scale(0.98);
 }
 
+.tool-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .tool-icon {
   flex-shrink: 0;
   width: 2.25rem;
@@ -149,6 +155,373 @@ body {
 .duration-button:active {
   background: var(--surface-2);
   transform: scale(0.96);
+}
+
+.text-input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.flashcard {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  min-height: min(24rem, 55vh);
+  cursor: pointer;
+  perspective: 60rem;
+}
+
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: min(24rem, 55vh);
+  transition: transform 0.4s ease;
+  transform-style: preserve-3d;
+}
+
+.flashcard.flipped .flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1.25rem;
+  background: var(--surface);
+  backface-visibility: hidden;
+}
+
+/* One Play/Record/Shadow trio, right-aligned at the end of its own
+   top/bottom section (see .flashcard-stacked-top/-bottom below) - a normal
+   flex child, not an overlay, so it never fights the always-visible
+   grade-buttons overlay lower down. */
+.face-audio-buttons {
+  display: flex;
+  align-self: flex-end;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+}
+
+.flashcard:not(.flipped) .flashcard-back {
+  pointer-events: none;
+}
+
+.flashcard.flipped .flashcard-front {
+  pointer-events: none;
+}
+
+.flashcard-text {
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Loosely based on Cambridge Dictionary's own IPA styling (smaller, normal
+   weight against the surrounding bold flashcard text), with more
+   size/italic contrast added on top since Cambridge's exact subtlety
+   didn't read clearly at this app's much larger flashcard-text scale. */
+.ipa-text {
+  font-size: 0.7em;
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* A parenthetical annotation like "(noun)" - a note about the word, not
+   the word itself, so it reads distinctly from the main flashcard text but
+   without the IPA span's size drop (it's not a whole separate phonetic
+   guide, just a short qualifier). */
+.paren-text {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+
+/* Each individual word within flashcard-text, not the whole line - so
+   "voiture rouge" / "red car" is 4 independently clickable words, each
+   looking up itself, not one lookup for the whole phrase. */
+.clickable-word {
+  cursor: pointer;
+  text-underline-offset: 0.2rem;
+  transition: color 0.15s ease;
+}
+
+.clickable-word:hover {
+  color: var(--accent-1);
+  text-decoration: underline;
+}
+
+/* The back face can show more than one line of flashcard-text (e.g.
+   both faces of every Learn/Review/Practice card show front + back
+   stacked, one above the other) - stacked and centered, same as a single
+   line would be. */
+.flashcard-stacked-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+/* The two halves of a stacked card face - front on top (always shown,
+   whether or not the card's been flipped yet), back on the bottom (either
+   the blurred "?????" placeholder pre-flip, or the real back text once
+   flipped - see .flashcard-placeholder). */
+.flashcard-stacked-top,
+.flashcard-stacked-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.flashcard-placeholder {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.35rem;
+  color: var(--text-dim);
+  filter: blur(4px);
+  user-select: none;
+}
+
+/* A static (non-flipping) tile showing front/back stacked with a divider,
+   plus Edit/Delete actions - used by the Edit screen's card grid and
+   Practice's reveal view. */
+.flash-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1rem;
+  background: var(--surface);
+  text-align: left;
+}
+
+.tile-front {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.tile-divider {
+  width: 100%;
+  margin: 0;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tile-back {
+  margin: 0;
+  color: var(--text-dim);
+  flex: 1;
+}
+
+.tile-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.tile-button {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tile-button:active {
+  transform: scale(0.96);
+}
+
+.tile-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.tile-delete {
+  color: var(--record);
+  border-color: rgba(255, 93, 93, 0.3);
+}
+
+/* One pill per card in the current Learn/Review batch, ordered to match the
+   engine's live queue (a card sent to the back of the pool visually moves to
+   the back of the row) - grey until that card's been graded at least once,
+   then colored to match whichever grade button was last pressed for it (a
+   card graded Again then later passed with Good updates from red to green).
+   The currently-showing card gets a white ring, wherever it sits in the row. */
+.progress-dots {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 34rem;
+}
+
+.progress-dot {
+  flex: 1 1 0;
+  max-width: 1.5rem;
+  height: 0.9rem;
+  border-radius: 999px;
+  background: #4a4f5a;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.progress-dot.dot-again {
+  background: #e5484d;
+}
+
+.progress-dot.dot-hard {
+  background: #f97316;
+}
+
+.progress-dot.dot-good {
+  background: #30a46c;
+}
+
+.progress-dot.dot-easy {
+  background: var(--accent-1);
+}
+
+.progress-dot.dot-current {
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.progress-dot.dot-done {
+  box-shadow: 0 0 0 1px #9aa0ab;
+}
+
+.grade-buttons {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 20rem;
+}
+
+.grade-button {
+  flex: 1;
+  padding: 0.7rem 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease;
+}
+
+.grade-button:active {
+  transform: scale(0.96);
+}
+
+.grade-again {
+  background: #e5484d;
+}
+
+.grade-hard {
+  background: #f97316;
+}
+
+.grade-good {
+  background: #30a46c;
+}
+
+.grade-easy {
+  background: var(--accent-1);
+}
+
+.delete-button {
+  flex-shrink: 0;
+  width: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.6rem;
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.delete-button:active {
+  background: var(--surface-2);
+}
+
+.delete-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Puts the back button on the same row as the title instead of the shared
+   .back-button's normal floating-above-everything corner position - opted
+   into per-screen (not the default), via this class on a wrapper div. Grid
+   with 1fr/auto/1fr columns keeps the title visually centered regardless
+   of the back button's width, balanced by an empty spacer on the other
+   side. */
+.screen-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.screen-header .back-button {
+  position: static;
+  justify-self: start;
+  padding: 0.5rem;
+}
+
+.screen-header h1 {
+  justify-self: center;
+}
+
+.screen-header-spacer {
+  justify-self: end;
+}
+
+/* Mirrors .screen's own flex layout - a wrapper that exists purely to give
+   an `inert` binding a single target when a screen needs to suppress its
+   own input while the global Dictionary popup is open (see
+   docs/dictionary-spec.md's "Global ownership" section). */
+.screen-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
 }
 
 .back-button {

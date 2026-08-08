@@ -81,3 +81,16 @@ export async function playWordPronunciationTimed(word, lang = 'en') {
 
   return getGoogleTts().speak(word)
 }
+
+// Skips the dictionary-lookup step above entirely - for callers that want
+// synthetic speech for arbitrary text (e.g. a whole flashcard front/back
+// phrase, not a single dictionary word) and have no real pronunciation
+// clip to prefer in the first place. Still reuses the same shared Google
+// TTS engine as the fallback chain above.
+export function playTextAloud(text, rate = 1) {
+  getGoogleTts().speak(text, rate)
+}
+
+export function playTextAloudTimed(text) {
+  return getGoogleTts().speak(text)
+}

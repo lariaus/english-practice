@@ -3,7 +3,7 @@
 // legacy without-semicolon forms are not supported - real YouTube caption
 // XML always emits well-formed entities with a trailing semicolon, so this
 // is not a practical gap for this project's actual use. See
-// docs/migration-to-offline-app/step-4.md.
+// native-server/README.md.
 //
 // Do not hand-edit - regenerate from entities.json if this ever needs updating.
 

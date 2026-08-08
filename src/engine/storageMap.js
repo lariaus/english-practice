@@ -1,7 +1,7 @@
 // A key->JSON-value map, like localStorage but server-backed (native-
 // server's /storage/maps/:mapId/:key) and JSON-native (no manual
 // JSON.stringify/parse), with support for multiple independent named
-// maps. See docs/migration-to-offline-app/step-9.md.
+// maps. See docs/local-storage.md.
 //
 // Exactly one backing store is ever active at a time: if native-server
 // is reachable (checked once, see nativeServerClient.js), every call

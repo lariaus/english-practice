@@ -13,12 +13,16 @@
 // turn into a surprise bill unless this account is later upgraded to a paid
 // plan.
 
+import { handleFlashcardsRequest } from './flashcardsRoutes.js'
+
 const HISTORY_LIMIT = 5
 const HISTORY_KEY = 'history'
 
+// PUT/DELETE are only used by Flashcards' routes (editing/deleting a card
+// or set) - GET/POST/OPTIONS alone covered /history.
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Authorization, Content-Type',
 }
 
@@ -84,6 +88,11 @@ export default {
       // KV is only eventually consistent, so a read-after-write here could
       // race and return stale data.
       return jsonResponse(updated)
+    }
+
+    if (url.pathname.startsWith('/flashcards/')) {
+      const response = await handleFlashcardsRequest(request, env, url)
+      if (response) return response
     }
 
     return jsonResponse({ error: 'Not found' }, 404)

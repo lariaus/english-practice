@@ -5,9 +5,9 @@
 A quick word-lookup tool, reachable from anywhere in the app - not a screen
 you navigate to, but a global popup overlay summonable on top of whatever
 you're currently doing. Two ways to use it: look up one specific word
-(triggered by YT Shadowing's transcript-word click), or search for any word
-directly (via the Home screen's "Dictionary" entry, or a global keyboard
-shortcut).
+(triggered by a transcript-word click in YT Shadowing, or a flashcard
+front/back word click in Flashcards), or search for any word directly (via
+the Home screen's "Dictionary" entry, or a global keyboard shortcut).
 
 ## Two modes
 
@@ -25,9 +25,15 @@ shortcut).
 - **Transcript word click** (YT Shadowing): pauses the video, opens word
   mode for that word - see `yt-shadowing-spec.md`'s "Dictionary lookup"
   section.
+- **Flashcard front/back word click** (Flashcards' Learn/Review/Practice
+  screens): opens word mode for that word, same `emit('show-word', word)` →
+  `App.vue`'s `handleShowWord` path as the transcript click above - see
+  `flashcards-spec.md`. Every word is independently clickable (a card like
+  "voiture rouge"/"red car" is 4 separate lookups), unlike a transcript
+  line's click-to-seek behavior.
 - **Home screen "Dictionary" entry**: opens search mode, blank. Unlike the
-  other three Home entries (Recorder Loop, Robot Shadowing, YT Shadowing),
-  this doesn't navigate to a new screen - see `app-overview.md`.
+  other four Home entries (Recorder Loop, Robot Shadowing, YT Shadowing,
+  Flashcards), this doesn't navigate to a new screen - see `app-overview.md`.
 - **Global keyboard shortcut: Option+Shift+D** - works from any screen, at
   any time. Checked via `event.code === 'KeyD'`, not `event.key` - holding
   Option on Mac makes `key` report a produced special character (`∂` on a US
@@ -45,14 +51,16 @@ alone. Screens that can trigger it emit an event upward instead of holding a
 direct reference to it:
 
 - `YtShadowingPlayerScreen.vue`: `emit('show-word', word)`
+- `FlashcardsLearnScreen.vue`/`FlashcardsReviewScreen.vue`/
+  `FlashcardsPracticeScreen.vue`: same `emit('show-word', word)`
 - `HomeScreen.vue`: `emit('open-dictionary')`
 
 `App.vue` owns the actual `ref` and calls `showWord(word, options)` /
 `showSearch()` on it. Its open/closed state is passed back down to any
 screen that needs to gate its own behavior while it's open - e.g.
-`YtShadowingPlayerScreen.vue` receives a `dictionaryOpen` prop, driving its
-own `:inert` wrapper and keydown guard the same way it always has, just
-sourced globally instead of locally now. See
+`YtShadowingPlayerScreen.vue` (and the three Flashcards screens above)
+receive a `dictionaryOpen` prop, driving their own `:inert` wrapper the
+same way, just sourced globally instead of locally now. See
 `docs/common-design-philosophy.md`'s "Modal popups" section for the general
 "single global owner" pattern this follows - worth reusing for any future
 modal that isn't provably confined to one screen.
@@ -120,12 +128,16 @@ once the clip finishes (used by Shadow above).
 
 - Component: `DictionaryPopup.vue` (renamed from `WordInfoPopup.vue`),
   mounted once in `App.vue`.
-- Triggers: `YtShadowingPlayerScreen.vue` (`emit('show-word', word)`),
-  `HomeScreen.vue` (`emit('open-dictionary')`), and `App.vue`'s own global
-  keydown listener for the Option+Shift+D shortcut.
+- Triggers: `YtShadowingPlayerScreen.vue` and the three Flashcards session
+  screens (`emit('show-word', word)`), `HomeScreen.vue`
+  (`emit('open-dictionary')`), and `App.vue`'s own global keydown listener
+  for the Option+Shift+D shortcut.
 - Engines (plain JS, no Vue, unrenamed - already read fine as
   dictionary/word-related): `dictionaryClient.js` (fetch+cache word info),
-  `wordAudioPlayer.js` (pronunciation fallback chain),
+  `wordAudioPlayer.js` (pronunciation fallback chain - also exports
+  `playTextAloud`/`playTextAloudTimed`, a TTS-only subset with no
+  dictionary lookup, used by Flashcards' Play/Shadow buttons for a whole
+  phrase rather than a single dictionary word),
   `externalDictionarySites.js` (centered-window openers).
 - Shared UI, not owned by this doc: `RecordShadowButtons.vue` +
   `useRecordShadow.js` (Record/Shadow buttons), `PlayPauseIcon.vue`

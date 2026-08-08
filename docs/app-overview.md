@@ -4,11 +4,11 @@
 
 A small collection of self-practice "tools" for improving English pronunciation:
 **Recorder Loop** (see `pronunciation-self-monitor-spec.md`), **Robot
-Shadowing** (see `robot-shadowing-spec.md`), and **YT Shadowing** (see
-`yt-shadowing-spec.md`), designed to accommodate more tools later without
-rework. **Dictionary** (see `dictionary-spec.md`) is a different shape of
-"tool" - a global popup reachable from anywhere, not a screen you navigate
-to (see below).
+Shadowing** (see `robot-shadowing-spec.md`), **YT Shadowing** (see
+`yt-shadowing-spec.md`), and **Flashcards** (see `flashcards-spec.md`),
+designed to accommodate more tools later without rework. **Dictionary**
+(see `dictionary-spec.md`) is a different shape of "tool" - a global popup
+reachable from anywhere, not a screen you navigate to (see below).
 
 This doc covers the app shell: navigation structure, tech stack, and local
 development/testing workflow. Tool-specific behavior lives in its own doc file
@@ -19,7 +19,7 @@ one of them) live in `common-design-philosophy.md`.
 
 - **Home screen**: a menu listing available tools (a simple list of
   buttons/cards) — currently **"Recorder Loop"**, **"Robot Shadowing"**,
-  **"YT Shadowing"**, and **"Dictionary"**.
+  **"YT Shadowing"**, **"Flashcards"**, and **"Dictionary"**.
 - **Tool screen**: reached by tapping a tool on the home screen.
   - Has its own **Back** button to return to the home screen.
   - **Recorder Loop** first shows a duration picker — a row of buttons for
@@ -31,6 +31,10 @@ one of them) live in `common-design-philosophy.md`.
   - **YT Shadowing** first shows a URL-entry/history screen, then a second
     screen with the video player and all controls — see its own spec doc
     for details.
+  - **Flashcards** first shows a set picker, then a per-set screen (view/
+    edit cards, with Learn/Review/Practice sub-modes reached from there) —
+    see its own spec doc for the full navigation and its offline-read-only
+    fallback.
   - **Dictionary** is the one exception to "tapping a tool reaches a new
     screen" — it opens a popup overlay on top of whatever's currently
     showing (Home included) instead of navigating anywhere. It's also
@@ -69,22 +73,28 @@ one of them) live in `common-design-philosophy.md`.
 
 ## Local Development & Testing
 
-- The Vite **dev server** (with its HMR/module-transform magic) is not the
-  day-to-day way this app gets tested on-device. Instead: run `vite build`
-  to produce the static `dist/` folder, then serve that folder with a
-  **simple static file server** — no bundler, no middleware, just serves
-  files as-is — so what's tested locally is the same static output that
-  will be deployed to GitHub Pages.
-- The static server must be reachable from **both a laptop browser and an
-  iPhone** over the local network (same Wi-Fi), so it needs to bind to the
-  LAN interface (`0.0.0.0`), not just `localhost`.
-- **Resolved gotcha**: iOS Safari only allows `getUserMedia` (mic access) in
-  a "secure context." `localhost` counts as secure automatically (why laptop
-  testing works over plain HTTP), but an iPhone hitting the laptop's LAN IP
-  does not — confirmed by testing, Safari blocks mic access there. Solved
-  with a free Cloudflare quick tunnel (`cloudflared`) to get a real
-  `https://` URL without deploying anywhere — see the README for the exact
-  steps.
+Two ways to actually run and test the app, both starting from the same
+`vite build` static `dist/` output — the Vite **dev server** (HMR/module-
+transform) is not the day-to-day way this gets tested on-device either way:
+
+- **Browser** (laptop or a phone's browser): serve `dist/` with
+  `native_server_cli` (see `native-server/README.md` and the root
+  `README.md`) — a real C++ server, not a generic static file server, since
+  it also answers `/subtitles` (YouTube captions) and `/storage/maps/...`
+  (see `docs/local-storage.md`) alongside plain file serving. Reachable
+  from a phone's browser over the local network (same Wi-Fi) by binding to
+  the LAN interface (`--host 0.0.0.0`), not just `localhost`.
+  - **Resolved gotcha**: iOS Safari only allows `getUserMedia` (mic access)
+    in a "secure context." `localhost` counts as secure automatically (why
+    laptop testing works over plain HTTP), but a phone hitting the laptop's
+    LAN IP does not — confirmed by testing, Safari blocks mic access there.
+    Solved with a free Cloudflare quick tunnel (`cloudflared`) to get a real
+    `https://` URL without deploying anywhere — see the README for the
+    exact steps.
+- **The real Mac/iOS app** (`english-practice-app/`, run via Xcode): embeds
+  `native-server` directly in-process, bound to `127.0.0.1` only — no LAN
+  exposure and no tunnel needed for this path, since the `WKWebView` and
+  the server it's talking to are both local to the same device/process.
 
 ## Hosting (production)
 
@@ -96,10 +106,35 @@ one of them) live in `common-design-philosophy.md`.
   tags, and a generated icon set (`public/icons/`), so it launches
   standalone on iOS (full-screen, own icon, no Safari chrome).
 
+## Backend & local storage
+
+Two independent, deliberately separate systems now exist (both previously
+"out of scope," since built):
+
+- **`native-server`** (C++) — serves this app's own static files, YouTube
+  captions, and small per-device key-value storage (`StorageMap`), either
+  standalone (`native_server_cli`, for local dev/testing per above) or
+  embedded directly in the Mac/iOS app. See `docs/local-storage.md` and
+  `native-server/README.md`.
+- **Cloudflare Worker + KV** — cross-device-*synced* state: YT Shadowing
+  history (small, today), and Flashcards' sets/cards (its actual data
+  store - the one case here that's more than "small state," see
+  `flashcards-spec.md`) - a separate tier from the local-only storage
+  above. See `common-design-philosophy.md`'s "Online shared storage"
+  section and `docs/cross-device-sync.md`.
+
+Flashcards is the one feature that uses *both* tiers at once: the Worker
+is its real source of truth (always tried first), and `StorageMap` backs
+a minimal read-only fallback (front/back content only, no scheduling
+state) for when there's no connection - see `flashcards-spec.md`'s
+"Offline read-only cache" section.
+
 ## Explicitly out of scope for now
 
-- Accounts, backend, or data storage beyond local/in-session (and possibly
-  browser local storage) state.
+- Accounts (still no user/login concept anywhere in the app).
 - A full router library, state management library (Vuex/Pinia), or other
   infrastructure not yet justified by the app's current size.
-- Offline support / service worker caching — decided not needed.
+- Service worker caching for the GitHub-Pages-hosted web build — decided
+  not needed; offline support is instead pursued via the native Mac/iOS
+  app (see "Backend & local storage" above), not a web-platform PWA
+  caching layer.

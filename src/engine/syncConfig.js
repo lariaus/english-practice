@@ -4,7 +4,7 @@
 // later) reads it through here rather than touching storage directly.
 //
 // Backed by StorageMap (map 'core', key 'sync-server-url') - see
-// docs/migration-to-offline-app/step-9.md.
+// docs/local-storage.md.
 
 import { StorageMap } from './storageMap.js'
 

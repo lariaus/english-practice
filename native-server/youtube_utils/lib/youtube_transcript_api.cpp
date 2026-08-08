@@ -69,10 +69,10 @@ std::string extractInnertubeApiKey(const std::string& html, const std::string& v
   throw YouTubeRequestFailed("Could not extract INNERTUBE_API_KEY for video: " + videoId);
 }
 
-// Only distinguishes what native-exp-server/server.py itself distinguishes
-// today (VideoUnavailable) - everything else non-OK collapses into the
-// generic YouTubeRequestFailed, matching server.py's own `except Exception`
-// catch-all. See docs/migration-to-offline-app/step-4.md.
+// Only distinguishes what the old Python native-exp-server/server.py itself
+// distinguished (VideoUnavailable) - everything else non-OK collapses into
+// the generic YouTubeRequestFailed, matching that script's own `except
+// Exception` catch-all. See native-server/README.md.
 void assertPlayability(const nlohmann::json& innertubeData, const std::string& videoId) {
   auto statusIt = innertubeData.find("playabilityStatus");
   if (statusIt == innertubeData.end()) {
