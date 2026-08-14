@@ -110,6 +110,45 @@ offline, since learned/due status isn't cached; Learn/Review swap their
 `(count)` label for `Learn Flashcards`/`Review Flashcards` plus a
 "no connection" icon instead of showing a stale or zeroed count.
 
+## Resuming Learn/Review
+
+A Learn or Review session survives an app restart mid-batch - motivated by
+a real case where a stuck-audio-button bug forced an app restart and lost
+an entire in-progress batch. Backed by `StorageMap`
+(`src/engine/flashcardsSessionProgress.js`, same `'flashcards'` map as the
+offline cache above but a different key namespace - `` `learn-progress:<name>` ``/
+`` `review-progress:<name>` ``), and, like the offline cache, deliberately
+**local-only**: a session started on one device isn't resumable from
+another.
+
+- **What's saved**: the exact live state needed to reconstruct the session
+  identically - the queue (in order, with each card's `streak`/`lapsed`),
+  the completed-so-far list (`learned`/`results`), and the per-card grade
+  history that drives the progress dots' colors. Saved the moment a
+  non-empty batch is picked (before any grade), and re-saved after every
+  grade - not just on exit - so nothing is lost regardless of how the app
+  goes away.
+- **Resuming**: the Edit screen's Learn/Review buttons show "Resume
+  Learning"/"Resume Review" instead of the usual `(count)` whenever a saved
+  session exists for that set (checked alongside the offline-cache load,
+  skipped entirely while offline - resuming still requires a live
+  connection, same as starting a session normally). Opening the screen then
+  reconstructs the engine from the saved queue/streak/lapsed state instead
+  of picking a fresh batch - a resumed session is indistinguishable from
+  one that had just never been interrupted, dot colors included.
+- **Going stale**: any action that changes the set's cards - add, edit,
+  delete, CSV import, or Reset set - discards saved progress for *both*
+  Learn and Review outright, no attempt to patch around exactly what
+  changed. A saved session is trusted as always-valid at load time
+  precisely because of this - staleness is handled eagerly at the mutation
+  site instead of lazily re-validated on resume.
+- **Clearing on completion**: only once the batch's final
+  `mark_cards_learned`/`send_review_results` call actually succeeds. If
+  that submission fails (e.g. the connection drops right at the end), the
+  saved progress is deliberately left in place as a safety net rather than
+  the session's work being lost twice over - it stays resumable until a
+  submission finally succeeds.
+
 ## Dates, not timestamps
 
 Every API that needs "what day is it" takes a plain calendar date string
@@ -296,39 +335,47 @@ app.
 
 Follows Anki's real **legacy, SM-2-based** scheduler (not FSRS, Anki's
 current default since 23.10) - see `docs/anki-algorithm.md` for its exact
-constants/formulas. The **one
-deliberate deviation** from real Anki: learning/relearning step timers are
-forced to exactly 0 - no real-time waiting anywhere. Everything else (ease
-deltas, interval multipliers, the ease floor, lapse handling) is faithful.
+constants/formulas, with **two deliberate deviations**: learning/
+relearning step timers are forced to exactly 0 (no real-time waiting
+anywhere), and recovering from a lapse needs **two consecutive Goods**
+to actually complete, not real Anki's single relearning step (see the
+streak discussion below) - a deliberate app-specific choice, not
+Anki-faithful. Everything else (ease deltas, interval multipliers, the
+ease floor, lapse handling) is faithful.
 
 A review session fetches due uids via `get_to_review_cards`, in batches of
 15 (same constant/pattern as Learning), one review per set (no combined
 cross-set session). Skipped days simply pile overdue cards up together,
 same as real Anki.
 
-Grading uses AGAIN/HARD/GOOD/EASY. Same reinsertion scheme as Learning
-(5 cards later in the queue), minus the streak - Review is simple
-pass/fail, not 2-in-a-row. A card's outcome depends on whether it's still
-on its first attempt this session, or already recovering from a lapse:
+Grading uses AGAIN/HARD/GOOD/EASY. A card's outcome depends on whether
+it's still on its first attempt this session, or already recovering from
+a lapse. Where a card that isn't done yet actually goes back to in the
+queue mirrors Learning's own distinction exactly: **Again** (an actual
+failure) is urgent - reinserted 5 cards later for a quick retry - while a
+**Good that doesn't yet complete the streak just goes to the back of the
+queue**, same as Learning's "not yet graduated" Good:
 
 | Button | First attempt this session | Recovering from a lapse |
 |---|---|---|
-| Again | lapses - reinserted 5 cards later | reinserted 5 cards later (still recovering) |
-| Hard | completes normally, ease/interval math for Hard | reinserted 5 cards later (behaves like Again - see `docs/anki-algorithm.md`) |
-| Good | completes normally, ease/interval math for Good | completes with a **penalty**, not Good's normal math: ease −20%, `lapses` +1, interval reset to a flat 1 day, `lapsed: true` |
-| Easy | completes normally, ease/interval math for Easy | completes with the same penalty as Good above (the passing grade doesn't change the penalty), `lapsed: true` |
+| Again | lapses - reinserted 5 cards later | reinserted 5 cards later, and any Good streak built up so far resets to 0 |
+| Hard | completes normally, ease/interval math for Hard | reinserted 5 cards later, streak reset to 0 (behaves like Again for this purpose - see `docs/anki-algorithm.md` for why Hard can't complete a recovery at all) |
+| Good | completes normally, ease/interval math for Good | needs to be pressed **twice in a row** (mirroring Learning's own streak-of-2) - the first Good moves the card to the **back of the queue** (streak -> 1), not the 5-cards-later reinsert; the second completes it with a **penalty**, not Good's normal math: ease −20%, `lapses` +1, interval reset to a flat 1 day, `lapsed: true` |
+| Easy | completes normally, ease/interval math for Easy | **bypasses the streak entirely** and completes immediately, same as Easy already does in Learning - same penalty as Good above applies, `lapsed: true` |
 
-**Getting Again then Good is not the same outcome as getting Good
+**Getting Again then Good(s) is not the same outcome as getting Good
 directly** - the first attempt's Again is what triggers the penalty
 above, permanently, regardless of what grade eventually completes the
 card. A card that lapsed once this session always ends up worse off
 (lower ease, reset interval) than if it had passed on the first try.
 
 So a card only ever ends up back in the queue after an Again (first
-attempt) or an Again/Hard while recovering - it keeps coming back around
-in the *same* sitting, no waiting, however many attempts that takes, until
-a Good or Easy finally completes it. Only **Good** or **Easy** can
-actually graduate a card back out of Relearning into Review.
+attempt), an Again/Hard while recovering, or a single Good while
+recovering that hasn't yet completed the streak - it keeps coming back
+around in the *same* sitting, no waiting, however many attempts that
+takes, until Easy or a second consecutive Good finally completes it. Only
+**Good** or **Easy** can actually graduate a card back out of Relearning
+into Review.
 
 A card is only included in what's sent once it's actually been passed; if
 the session ends early, still-failing cards simply aren't sent - that
@@ -516,11 +563,14 @@ Above the card, a row of small pill-shaped dots - one per card in the
 current batch - tracks progress:
 
 - **Order mirrors the actual live queue**, not a fixed session-start order:
-  a card sent back of the pool (Learning's Hard/first Good, Review's
-  Hard-while-recovering) moves toward the end of the row; a card reinserted
-  via Again moves 5 dots ahead. Watching the row shuffle is a direct
-  reflection of `FlashcardsLearningEngine`/`FlashcardsReviewEngine`'s
-  internal queue reordering.
+  a card sent back of the pool (Learning's Hard/first Good, Review's Good
+  while recovering that hasn't yet completed the streak) moves toward the
+  end of the row; a card reinserted via Again moves 5 dots ahead - same
+  treatment for Review's Hard while recovering, which behaves like Again
+  for this purpose rather than going back of the pool the way Learning's
+  Hard does. Watching the row shuffle is a direct reflection of
+  `FlashcardsLearningEngine`/`FlashcardsReviewEngine`'s internal queue
+  reordering.
 - **Completed cards occupy a fixed prefix at the front of the row**, in the
   order they finished, and never move again once there - a card that's
   actually done (graduated in Learning, passed in Review) stops

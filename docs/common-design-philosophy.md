@@ -43,6 +43,24 @@ rather than writing a new bespoke version.
     already known) are genuinely different sequences - forcing one shape onto both
     would've made one of them worse. Only the plumbing that's actually
     identical is shared.
+- **Recovering from backgrounding**: iOS suspends/kills audio state
+  aggressively once the screen locks or the app backgrounds for a while -
+  the mic's `MediaStreamTrack` gets force-ended, an `AudioContext` gets
+  suspended, and a persisted TTS `<audio>` element's media session can be
+  revoked, all silently (no error, no console output) if nothing checks
+  for it. Every engine that holds one of these across time rather than
+  creating it fresh per call - `micRecorderEngine.js`,
+  `recorderLoopEngine.js`, `robotShadowingEngine.js`, and `ttsEngine.js`'s
+  persistent `<audio>` element (reused as a singleton by
+  `wordAudioPlayer.js`'s `getGoogleTts()`) - listens for `visibilitychange`
+  and, on return to the foreground, resumes a suspended `AudioContext` and
+  (mic engines only) drops a stream whose tracks are no longer `'live'` so
+  the next press re-acquires a fresh one instead of silently recording/
+  playing nothing. `ttsEngine.js` additionally retries a failed `.play()`
+  once (`load()` then replay) before giving up, rather than treating the
+  rejection as a normal completed playback like it used to. Any *new*
+  engine that owns a stream/context/audio element across more than one
+  call should follow the same pattern rather than rediscovering this.
 - **`useShiftOrLongPress.js`** (composable) - the generic gesture
   underneath both Shadow's double-pass and Play's temporary slow-speed
   playback (see below): a shift-click (desktop) or a ~500ms long-press

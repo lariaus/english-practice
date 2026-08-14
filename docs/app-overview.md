@@ -117,11 +117,11 @@ Two independent, deliberately separate systems now exist (both previously
   embedded directly in the Mac/iOS app. See `docs/local-storage.md` and
   `native-server/README.md`.
 - **Cloudflare Worker + KV** — cross-device-*synced* state: YT Shadowing
-  history (small, today), and Flashcards' sets/cards (its actual data
-  store - the one case here that's more than "small state," see
-  `flashcards-spec.md`) - a separate tier from the local-only storage
-  above. See `common-design-philosophy.md`'s "Online shared storage"
-  section and `docs/cross-device-sync.md`.
+  history and user-created Playlists (small, today), and Flashcards' sets/
+  cards (its actual data store - the one case here that's more than
+  "small state," see `flashcards-spec.md`) - a separate tier from the
+  local-only storage above. See `common-design-philosophy.md`'s "Online
+  shared storage" section and `docs/cross-device-sync.md`.
 
 Flashcards is the one feature that uses *both* tiers at once: the Worker
 is its real source of truth (always tried first), and `StorageMap` backs

@@ -13,20 +13,22 @@
     <div class="mode-buttons">
       <button
         class="mode-button"
-        :disabled="isOffline || unlearnedCount === 0"
+        :disabled="isOffline || (!hasLearnProgress && unlearnedCount === 0)"
         :title="isOffline ? 'Requires a connection' : null"
         @click="$emit('learn')"
       >
         <template v-if="isOffline">Learn Flashcards <OfflineIcon /></template>
+        <template v-else-if="hasLearnProgress">Resume Learning</template>
         <template v-else>Learn ({{ learnCount }})</template>
       </button>
       <button
         class="mode-button"
-        :disabled="isOffline || dueCount === 0"
+        :disabled="isOffline || (!hasReviewProgress && dueCount === 0)"
         :title="isOffline ? 'Requires a connection' : null"
         @click="$emit('review')"
       >
         <template v-if="isOffline">Review Flashcards <OfflineIcon /></template>
+        <template v-else-if="hasReviewProgress">Resume Review</template>
         <template v-else>Review ({{ dueCount }})</template>
       </button>
       <button class="mode-button" @click="$emit('practice')">Practice</button>
@@ -127,6 +129,11 @@ import {
   getSetOrCached,
   importCsvCached,
 } from '../engine/flashcardsOfflineCache.js'
+import {
+  clearAllProgressForSet,
+  loadLearnProgress,
+  loadReviewProgress,
+} from '../engine/flashcardsSessionProgress.js'
 import { showToast } from '../composables/useToast.js'
 import { today } from '../engine/flashcardsToday.js'
 import { BATCH_SIZE } from '../engine/flashcardsConstants.js'
@@ -146,6 +153,8 @@ const fileInputRef = ref(null)
 const searchQuery = ref('')
 const showAddForm = ref(false)
 const isOffline = ref(false)
+const hasLearnProgress = ref(false)
+const hasReviewProgress = ref(false)
 
 // A card is "learned" once it's left state NEW - see docs/flashcards-spec.md.
 const learnedCount = computed(() => cards.value.filter((c) => c.state !== 'NEW').length)
@@ -183,6 +192,17 @@ onMounted(async () => {
     const result = await getSetOrCached(props.setName)
     cards.value = result.set.cards
     isOffline.value = result.offline
+
+    // A resume glance is a nice-to-have, not needed while offline - Learn/
+    // Review are already disabled in that case regardless of this.
+    if (!isOffline.value) {
+      const [learnSaved, reviewSaved] = await Promise.all([
+        loadLearnProgress(props.setName),
+        loadReviewProgress(props.setName),
+      ])
+      hasLearnProgress.value = !!learnSaved
+      hasReviewProgress.value = !!reviewSaved
+    }
   } catch (e) {
     error.value = e.message
     // A connectivity failure with nothing cached yet for this particular
@@ -194,6 +214,15 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+// Instant UI feedback for the Resume button labels, mirroring the
+// clearAllProgressForSet() call already happening underneath each of these
+// mutations - avoids waiting for a remount to reflect that a saved session
+// is no longer valid.
+function clearProgressFlags() {
+  hasLearnProgress.value = false
+  hasReviewProgress.value = false
+}
 
 async function handleAdd() {
   const front = newFront.value.trim()
@@ -214,6 +243,7 @@ async function handleAdd() {
     cards.value.push({ uid, front, back, state: 'NEW' })
     newFront.value = ''
     newBack.value = ''
+    clearProgressFlags()
   } catch (e) {
     showToast(e.message, { type: 'error' })
   }
@@ -232,6 +262,7 @@ async function handleSaveEdit(uid) {
     const card = cards.value.find((c) => c.uid === uid)
     Object.assign(card, updated)
     editingUid.value = null
+    clearProgressFlags()
   } catch (e) {
     showToast(e.message, { type: 'error' })
   }
@@ -241,6 +272,7 @@ async function handleDelete(uid) {
   try {
     await deleteCardCached(props.setName, uid)
     cards.value = cards.value.filter((c) => c.uid !== uid)
+    clearProgressFlags()
   } catch (e) {
     showToast(e.message, { type: 'error' })
   }
@@ -279,6 +311,7 @@ async function handleFileSelected(event) {
     const csvText = await file.text()
     const set = await importCsvCached(props.setName, csvText)
     cards.value = set.cards
+    clearProgressFlags()
   } catch (e) {
     showToast(e.message, { type: 'error' })
   }
@@ -293,6 +326,11 @@ async function handleReset() {
   try {
     const set = await resetSet(props.setName)
     cards.value = set.cards
+    // Not routed through flashcardsOfflineCache.js like the other mutations
+    // above, so the resume-progress invalidation has to happen directly
+    // here instead of inside a *Cached wrapper.
+    await clearAllProgressForSet(props.setName)
+    clearProgressFlags()
   } catch (e) {
     showToast(e.message, { type: 'error' })
   }

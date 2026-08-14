@@ -22,6 +22,26 @@ export const TTS_VOICE_OPTIONS = [
 const SILENT_WAV_DATA_URL =
   'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA='
 
+// Times an <audio> element's real playback, not the time since playback was
+// merely requested - so network fetch/buffering delay before the first
+// audible frame never leaks into "how long did that take to say". Rebaselines
+// on every 'playing' event (the browser fires it each time playback actually
+// (re)starts after being delayed for data, including after a stuck-audio
+// retry reloads the element), so only time spent genuinely producing sound
+// counts. Shared by every backend/helper in this file (and wordAudioPlayer.js)
+// that needs to report a clip's real speaking time.
+export function trackAudioPlaybackSeconds(audioEl, { minSeconds = 0.5 } = {}) {
+  let startedAt = Date.now()
+  const onPlaying = () => {
+    startedAt = Date.now()
+  }
+  audioEl.addEventListener('playing', onPlaying)
+  return {
+    elapsedSeconds: () => Math.max(minSeconds, (Date.now() - startedAt) / 1000),
+    stop: () => audioEl.removeEventListener('playing', onPlaying),
+  }
+}
+
 function parseIdentifier(identifier) {
   if (identifier === GOOGLE_TTS_ID) return { type: 'google-tts-api' }
   if (identifier?.startsWith(DEFAULT_ENGINE_PREFIX)) {
@@ -172,14 +192,28 @@ export class TTSEngine {
         return
       }
 
+      // A phrase interrupted mid-playback by backgrounding can leave the
+      // element wedged: iOS never delivers 'ended' (or 'pause'), so `paused`
+      // stays false and `currentTime` stays frozen forever, even once a new
+      // `src` is assigned on top of it later - play() on it then just
+      // resolves immediately ("already playing") without actually decoding/
+      // rendering anything, with no error anywhere. A fresh phrase should
+      // never find the element already unpaused, so treat that as the
+      // signal to force a real reset before doing anything else.
+      if (!this._audioEl.paused) {
+        this._audioEl.pause()
+        this._audioEl.load()
+      }
+
       this._activeResolve = resolve
       this._audioEl.playbackRate = rate
-      const startedAt = Date.now()
+      const tracker = trackAudioPlaybackSeconds(this._audioEl, { minSeconds: 1 })
 
       const finish = () => {
         this._audioEl.removeEventListener('ended', finish)
         this._audioEl.removeEventListener('error', finish)
-        const elapsedSeconds = Math.max(1, (Date.now() - startedAt) / 1000)
+        tracker.stop()
+        const elapsedSeconds = tracker.elapsedSeconds()
         const resolveFn = this._activeResolve
         this._activeResolve = null
         if (resolveFn) resolveFn(elapsedSeconds)
@@ -187,19 +221,76 @@ export class TTSEngine {
       this._audioEl.addEventListener('ended', finish)
       this._audioEl.addEventListener('error', finish)
 
+      // A play() rejection after the app's been backgrounded a while (iOS
+      // can revoke a page's media session) used to just call finish()
+      // directly here - which *resolves*, indistinguishable from a real
+      // completed playback, so the caller has no idea nothing was actually
+      // heard. A stale/broken persistent <audio> element is often revived
+      // by reload()ing it, so retry once with a fresh load before actually
+      // giving up - only reaches finish() untouched if the retry also fails.
+      const playWithRetry = (isRetry = false) => {
+        // A resolved play() promise doesn't guarantee real playback - the
+        // wedged-element case above resolves immediately without ever
+        // advancing, with no rejection to catch. But the stuck-detection
+        // clock must NOT start from the moment play() resolves - on a slow
+        // connection, the actual audio data can take several seconds to
+        // arrive, and that's not a bug, just a slow network. The confirmed
+        // wedged case had data fully loaded (readyState=4) and STILL never
+        // advanced, so the right signal is "has data arrived, and if so, is
+        // it actually moving" - not "has some fixed amount of time passed."
+        // Wait for 'loadeddata' (readyState reaching HAVE_CURRENT_DATA)
+        // before arming the short timeupdate-based check at all; however
+        // long that first wait takes is assumed to be normal buffering.
+        let gotProgress = false
+        const onTimeUpdate = () => { gotProgress = true }
+
+        const checkStuckAfterDataArrives = () => {
+          this._audioEl.addEventListener('timeupdate', onTimeUpdate)
+          setTimeout(() => {
+            this._audioEl.removeEventListener('timeupdate', onTimeUpdate)
+            const stillFrozen = !gotProgress && !this._audioEl.ended
+            if (!stillFrozen) return
+            if (isRetry) {
+              finish() // already retried once and it's still wedged - give up cleanly
+              return
+            }
+            this._audioEl.pause()
+            this._audioEl.load()
+            this._audioEl.currentTime = 0
+            playWithRetry(true)
+          }, 1500)
+        }
+
+        this._audioEl.play().then(() => {
+          if (this._audioEl.readyState >= 2) {
+            checkStuckAfterDataArrives()
+            return
+          }
+          this._audioEl.addEventListener('loadeddata', checkStuckAfterDataArrives, { once: true })
+        }).catch(() => {
+          if (isRetry) {
+            finish()
+            return
+          }
+          this._audioEl.load()
+          this._audioEl.currentTime = 0
+          playWithRetry(true)
+        })
+      }
+
       // Same phrase as the last request (e.g. a shadowing repeat, or the
       // "repeat model" replay) - just replay what's already loaded instead
       // of hitting the network again.
       if (this._lastGoogleTtsText === text) {
         this._audioEl.currentTime = 0
-        this._audioEl.play().catch(finish)
+        playWithRetry()
         return
       }
 
       this._lastGoogleTtsText = text
       const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=en-US&client=tw-ob`
       this._audioEl.src = url
-      this._audioEl.play().catch(finish)
+      playWithRetry()
     })
   }
 }

@@ -14,6 +14,17 @@ export class FlashcardsLearningEngine {
     this._learned = []
   }
 
+  // Reconstructs an engine from a previously saved queue/learned snapshot
+  // (see flashcardsSessionProgress.js) instead of a fresh uid list - used
+  // to resume a session across an app restart. Behaves identically to an
+  // engine that reached the same state by grading through from scratch.
+  static restore(queue, learned) {
+    const engine = new FlashcardsLearningEngine([])
+    engine._queue = queue.map((entry) => ({ ...entry }))
+    engine._learned = learned.map((entry) => ({ ...entry }))
+    return engine
+  }
+
   get currentUid() {
     return this._queue.length > 0 ? this._queue[0].uid : null
   }
@@ -31,6 +42,12 @@ export class FlashcardsLearningEngine {
   // which must stay in sync with the actual queue rather than a fixed slot.
   get queueUids() {
     return this._queue.map((entry) => entry.uid)
+  }
+
+  // Raw queue entries (uid + streak), for persisting a resumable snapshot -
+  // queueUids above only exposes the uid, not enough to resume mid-streak.
+  get queueEntries() {
+    return this._queue.map((entry) => ({ ...entry }))
   }
 
   // list[{uid, grade: 'GOOD'|'EASY'}] - only cards that have actually

@@ -2,7 +2,7 @@
   <main class="screen yt-player-screen">
     <!-- inert while the word popup is open - nothing behind it (clicks,
          keyboard focus/activation) should be reachable until it closes. -->
-    <div class="screen-content" :inert="isDictionaryOpen || null">
+    <div class="screen-content" :inert="isDictionaryOpen || isAddToPlaylistOpen || null">
       <div class="screen-header">
         <button class="back-button" @click="handleBack">&larr; Back</button>
         <h1>YT Shadowing</h1>
@@ -159,7 +159,10 @@
               <button
                 class="capture-button compact"
                 :class="{ recording: isCapturing, looping: isLoopingMode }"
-                :disabled="!isReady || !!captureRange || isShadowing || isAutoShadowing || handFreeModeEnabled"
+                :disabled="
+                  !isReady || !!captureRange || isShadowing || isAutoShadowing ||
+                  handFreeModeEnabled || handFreeRecordDoubleModeEnabled
+                "
                 @pointerdown="handleCaptureStart"
                 @pointerup="handleCaptureEnd"
                 @pointercancel="handleCaptureCancel"
@@ -184,6 +187,21 @@
                   </svg>
                 </span>
                 <span>{{ captureButtonLabel }}</span>
+              </button>
+
+              <button
+                class="playlist-add-button compact"
+                v-if="state.videoTitle"
+                :disabled="controlsDisabled"
+                @click="isAddToPlaylistOpen = true"
+              >
+                <span class="playlist-icon">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M4 6h11M4 12h11M4 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    <path d="M17 14v6M14 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  </svg>
+                </span>
+                <span>Playlist</span>
               </button>
 
               <button
@@ -217,7 +235,7 @@
               <button
                 class="hf-button"
                 :class="{ active: handFreeModeEnabled }"
-                :disabled="handFreeShadowModeEnabled || handFreeShadowDoubleModeEnabled"
+                :disabled="handFreeShadowModeEnabled || handFreeShadowDoubleModeEnabled || handFreeRecordDoubleModeEnabled"
                 @click="handFreeModeEnabled = !handFreeModeEnabled"
               >
                 <span class="capture-icon">
@@ -230,8 +248,22 @@
 
               <button
                 class="hf-button"
+                :class="{ active: handFreeRecordDoubleModeEnabled }"
+                :disabled="handFreeModeEnabled || handFreeShadowModeEnabled || handFreeShadowDoubleModeEnabled"
+                @click="handFreeRecordDoubleModeEnabled = !handFreeRecordDoubleModeEnabled"
+              >
+                <span class="capture-icon">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="7" fill="currentColor" />
+                  </svg>
+                </span>
+                <span>HF²</span>
+              </button>
+
+              <button
+                class="hf-button"
                 :class="{ active: handFreeShadowModeEnabled }"
-                :disabled="handFreeModeEnabled || handFreeShadowDoubleModeEnabled"
+                :disabled="handFreeModeEnabled || handFreeShadowDoubleModeEnabled || handFreeRecordDoubleModeEnabled"
                 @click="handFreeShadowModeEnabled = !handFreeShadowModeEnabled"
               >
                 <span class="shadow-icon">
@@ -252,7 +284,7 @@
               <button
                 class="hf-button"
                 :class="{ active: handFreeShadowDoubleModeEnabled }"
-                :disabled="handFreeModeEnabled || handFreeShadowModeEnabled"
+                :disabled="handFreeModeEnabled || handFreeShadowModeEnabled || handFreeRecordDoubleModeEnabled"
                 @click="handFreeShadowDoubleModeEnabled = !handFreeShadowDoubleModeEnabled"
               >
                 <span class="shadow-icon">
@@ -316,6 +348,16 @@
     </div>
     </div>
 
+    <!-- Mounted as a sibling of .screen-content, not inside it - that div
+         goes `inert` while this is open (see its own comment above), and
+         inert is inherited by descendants, so a popup rendered inside it
+         would make itself unclickable too, including its own close button. -->
+    <AddToPlaylistPopup
+      v-if="isAddToPlaylistOpen"
+      :video="buildCurrentVideoInfo()"
+      @close="isAddToPlaylistOpen = false"
+    />
+
     <!-- EXPERIMENTAL Hands-Free Record overlay - see script section. No
          visual content by design (not even a background change beyond the
          static scrim) - a plain tap advances handsFreePhase, a long-press
@@ -323,7 +365,12 @@
          eventual release doesn't also fire a duplicate tap action. -->
     <div
       class="hands-free-overlay"
-      v-if="handFreeModeEnabled || handFreeShadowModeEnabled || handFreeShadowDoubleModeEnabled"
+      v-if="
+        handFreeModeEnabled ||
+        handFreeShadowModeEnabled ||
+        handFreeShadowDoubleModeEnabled ||
+        handFreeRecordDoubleModeEnabled
+      "
       @pointerdown="handleHandsFreeOverlayPointerDown"
       @pointerup="handleHandsFreeOverlayPointerUp"
       @pointercancel="handleHandsFreeOverlayPointerCancel"
@@ -350,6 +397,7 @@ import { useShiftOrLongPress } from '../composables/useShiftOrLongPress.js'
 import { MicRecorderEngine } from '../engine/micRecorderEngine.js'
 import RecordShadowButtons from '../components/RecordShadowButtons.vue'
 import PlayPauseIcon from '../components/PlayPauseIcon.vue'
+import AddToPlaylistPopup from '../components/AddToPlaylistPopup.vue'
 
 const props = defineProps({
   videoId: { type: String, required: true },
@@ -616,7 +664,8 @@ const captureFromSelectionDisabled = computed(
     isAutoShadowing.value ||
     isLoopingMode.value ||
     !hasTranscriptSelection.value ||
-    handFreeModeEnabled.value, // EXPERIMENTAL Hands-Free mode
+    handFreeModeEnabled.value || // EXPERIMENTAL Hands-Free mode
+    handFreeRecordDoubleModeEnabled.value,
 )
 
 // Unlike the press-and-hold Capture flow, a selection has already been
@@ -681,7 +730,8 @@ const controlsDisabled = computed(
     !!captureRange.value ||
     isShadowing.value ||
     isAutoShadowing.value ||
-    handFreeModeEnabled.value, // EXPERIMENTAL Hands-Free mode - see below
+    handFreeModeEnabled.value || // EXPERIMENTAL Hands-Free mode - see below
+    handFreeRecordDoubleModeEnabled.value,
 )
 
 const isMicBusy = computed(() => micState.phase !== 'idle' && micState.phase !== 'error')
@@ -690,7 +740,12 @@ const isMicBusy = computed(() => micState.phase !== 'idle' && micState.phase !==
 // Record/Shadow/Auto Shadow is currently doing with the mic and/or video -
 // blocked (both plain and shift-click) while any of them is active.
 const wordClickDisabled = computed(
-  () => isMicBusy.value || isShadowing.value || isAutoShadowing.value || handFreeModeEnabled.value,
+  () =>
+    isMicBusy.value ||
+    isShadowing.value ||
+    isAutoShadowing.value ||
+    handFreeModeEnabled.value ||
+    handFreeRecordDoubleModeEnabled.value,
 )
 
 // Seeking via a transcript line shouldn't be possible while capturing (held
@@ -901,7 +956,8 @@ const shadowButtonDisabled = computed(
     isCapturing.value ||
     !!captureRange.value ||
     isAutoShadowing.value ||
-    handFreeModeEnabled.value, // EXPERIMENTAL Hands-Free mode
+    handFreeModeEnabled.value || // EXPERIMENTAL Hands-Free mode
+    handFreeRecordDoubleModeEnabled.value,
 )
 
 const autoShadowButtonDisabled = computed(
@@ -911,7 +967,8 @@ const autoShadowButtonDisabled = computed(
     !!captureRange.value ||
     isLoopingMode.value ||
     isShadowing.value ||
-    handFreeModeEnabled.value, // EXPERIMENTAL Hands-Free mode
+    handFreeModeEnabled.value || // EXPERIMENTAL Hands-Free mode
+    handFreeRecordDoubleModeEnabled.value,
 )
 
 // One play/beep/record/beep/playback/beep cycle, repeated `repeatCount`
@@ -1087,17 +1144,26 @@ watch(
   },
 )
 
-// Shared by every "this watch session is ending" path below.
-function buildHistoryExitEntry() {
+// Shared by both History's exit-time writes and Add-to-Playlist - the
+// latter never wants currentPosition (see docs/yt-shadowing-spec.md's
+// "Playlists" section - position is always looked up live from History,
+// never stored on a playlist's own video entry).
+function buildCurrentVideoInfo() {
   return {
     videoId: props.videoId,
     url: props.url,
     title: state.videoTitle,
     author: state.videoAuthor,
     duration: engine.getDuration(),
-    currentPosition: engine.getCurrentTime(),
   }
 }
+
+// Shared by every "this watch session is ending" path below.
+function buildHistoryExitEntry() {
+  return { ...buildCurrentVideoInfo(), currentPosition: engine.getCurrentTime() }
+}
+
+const isAddToPlaylistOpen = ref(false)
 
 // In-app Back: the page itself stays alive (this is just a Vue screen
 // swap, not a real navigation), so a normal fetch (via addToHistory) is
@@ -1190,11 +1256,15 @@ watch(speedPopoverOpen, (open) => {
 // ============================================================================
 const advancedControlsExpanded = ref(false)
 const handFreeModeEnabled = ref(false)
+// Same tap-anywhere overlay mechanism and engine as handFreeModeEnabled
+// above, parameterized to run the double-record sequence instead - see
+// handleHandsFreeOverlayClick/runHandsFreeDoubleRecord below.
+const handFreeRecordDoubleModeEnabled = ref(false)
 // "HF" (Shadow icon) and "HF²" (Shadow icon) - same tap-anywhere overlay
 // mechanism as handFreeModeEnabled above. handFreeShadowDoubleModeEnabled
 // forces the double-pass on every cycle; handFreeShadowModeEnabled always
-// stays single-pass. Mutually exclusive with each other and with
-// handFreeModeEnabled - see the :disabled bindings on all three buttons.
+// stays single-pass. Mutually exclusive with each other and with the two
+// record modes above - see the :disabled bindings on all four buttons.
 const handFreeShadowModeEnabled = ref(false)
 const handFreeShadowDoubleModeEnabled = ref(false)
 
@@ -1269,16 +1339,24 @@ async function rehearHandsFreeShadowOriginal() {
   handsFreeShadowActive = false
 }
 
-// Hands-Free Record: while handFreeModeEnabled is on, a full-viewport
-// overlay (see template) captures every click/tap as "the press" - a direct
-// stand-in for the physical button press an earlier (abandoned) AirPods-
-// based design could only detect indirectly. Own independent
-// MicRecorderEngine instance, never useRecordShadow's shared one (same
-// "fine to reuse the class, never the instance" isolation rule as before).
-// No visual/audio feedback anywhere in this cycle, by design - the whole
-// point is not looking at the screen.
-let handsFreePhase = 'idle' // idle | record | replay
+// Hands-Free Record: while handFreeModeEnabled (or handFreeRecordDoubleModeEnabled,
+// its double-pass sibling below) is on, a full-viewport overlay (see
+// template) captures every click/tap as "the press" - a direct stand-in
+// for the physical button press an earlier (abandoned) AirPods-based
+// design could only detect indirectly. Own independent MicRecorderEngine
+// instance, never useRecordShadow's shared one (same "fine to reuse the
+// class, never the instance" isolation rule as before). No visual/audio
+// feedback anywhere in this cycle, by design - the whole point is not
+// looking at the screen.
+//
+// Shared by both the single and double modes (one engine, one phase
+// machine, parameterized by handFreeRecordDoubleModeEnabled) - same
+// precedent as handFreeShadow(wantsDouble) below, rather than a second
+// full independent copy.
+let handsFreePhase = 'idle' // idle | record | replay | double
 let handsFreeRecordStartPosition = 0
+let handsFreeRecordStartedAt = 0
+let handsFreeDoubleRecordPromise = null
 
 function handleHandsFreeMicChange(snapshot) {
   if (handsFreePhase !== 'replay') return
@@ -1290,11 +1368,59 @@ function handleHandsFreeMicChange(snapshot) {
 
 const handsFreeMicEngine = new MicRecorderEngine({ onChange: handleHandsFreeMicChange })
 
-// idle -> record: pause, remember position, start recording.
-// record -> replay: stop recording (auto-plays the recording back, per
+// The fully-automated back half of hands-free double record, kicked off
+// once recording 1 is stopped (see handleHandsFreeOverlayClick): beep,
+// listen to pass 1, beep, an auto-timed pass 2 (same length as pass 1 +
+// 0.5s - there's no natural third tap to stop it hands-free), beep, listen
+// to pass 2, then the same silent seek-back-and-resume ending as a single
+// hands-free recording. Uses recordUntilStopped()/recordFor()/playBlob()/
+// playBeep() directly (not the onChange watcher above) so a beep can be
+// inserted before each playback - start()/stop()'s own auto-play-on-stop
+// contract has no seam for that.
+async function runHandsFreeDoubleRecord() {
+  const blob1 = await handsFreeDoubleRecordPromise
+  const pass1Seconds = (Date.now() - handsFreeRecordStartedAt) / 1000
+
+  await handsFreeMicEngine.playBeep()
+  if (blob1) await handsFreeMicEngine.playBlob(blob1)
+  await handsFreeMicEngine.playBeep()
+  const blob2 = await handsFreeMicEngine.recordFor(pass1Seconds + 0.5)
+  await handsFreeMicEngine.playBeep()
+  if (blob2) await handsFreeMicEngine.playBlob(blob2)
+
+  handsFreePhase = 'idle'
+  engine.seekTo(handsFreeRecordStartPosition)
+  engine.play()
+}
+
+// idle -> record: pause, remember position, start recording (tap-to-stop
+// either way, single or double mode).
+// record -> (single mode) replay: stop recording (auto-plays it back, per
 // MicRecorderEngine's own start()/stop() contract); video stays paused.
-// replay: a tap here is a no-op - playback just keeps going regardless.
+// record -> (double mode) double: stop recording (without auto-playing -
+// see recordUntilStopped()) and hand off to runHandsFreeDoubleRecord()
+// for the rest of the sequence.
+// replay/double: a tap here is a no-op - the automated sequence just keeps
+// going regardless, same convention either way.
 function handleHandsFreeOverlayClick() {
+  if (handFreeRecordDoubleModeEnabled.value) {
+    if (handsFreePhase === 'idle') {
+      handsFreePhase = 'record'
+      handsFreeRecordStartPosition = engine.getCurrentTime()
+      handsFreeRecordStartedAt = Date.now()
+      engine.pause()
+      handsFreeDoubleRecordPromise = handsFreeMicEngine.recordUntilStopped()
+      return
+    }
+
+    if (handsFreePhase === 'record') {
+      handsFreePhase = 'double'
+      handsFreeMicEngine.stop()
+      runHandsFreeDoubleRecord()
+    }
+    return
+  }
+
   if (handsFreePhase === 'idle') {
     handsFreePhase = 'record'
     handsFreeRecordStartPosition = engine.getCurrentTime()
@@ -1309,11 +1435,11 @@ function handleHandsFreeOverlayClick() {
   }
 }
 
-// Single tap dispatcher, shared by all three Hands-Free overlays (only one
+// Single tap dispatcher, shared by all four Hands-Free overlays (only one
 // is ever active/rendered at a time - see the template's v-if and the
 // buttons' mutual :disabled bindings) - routes to whichever mode is active.
 function handleHandsFreeOverlayTap() {
-  if (handFreeModeEnabled.value) {
+  if (handFreeModeEnabled.value || handFreeRecordDoubleModeEnabled.value) {
     handleHandsFreeOverlayClick()
     return
   }
@@ -1346,6 +1472,7 @@ function clearHandsFreeLongPressTimer() {
 
 function exitAllHandsFreeModes() {
   handFreeModeEnabled.value = false
+  handFreeRecordDoubleModeEnabled.value = false
   handFreeShadowModeEnabled.value = false
   handFreeShadowDoubleModeEnabled.value = false
 }
@@ -1373,10 +1500,13 @@ function handleHandsFreeOverlayPointerCancel() {
   handsFreeLongPressFired = false
 }
 
-// Shared cleanup for every way handFreeModeEnabled can turn off - the
-// long-press exit above, or anything else that might flip it later.
-watch(handFreeModeEnabled, (enabled) => {
-  if (enabled) return
+// Shared cleanup for every way either record mode can turn off - the
+// long-press exit above, or anything else that might flip it later. Both
+// share this one watcher since they share the one engine/phase machine -
+// only resets once *neither* is enabled, same shape as the Shadow pair's
+// watcher below.
+watch([handFreeModeEnabled, handFreeRecordDoubleModeEnabled], ([single, double]) => {
+  if (single || double) return
   handsFreePhase = 'idle'
   handsFreeMicEngine.destroy()
 })
@@ -1400,13 +1530,14 @@ function isTypingTarget(target) {
 function handleKeydown(event) {
   if (isTypingTarget(event.target)) return
 
-  // While the dictionary is open, none of this screen's shortcuts should
-  // fire - it has its own separate Escape-to-close handler.
-  if (isDictionaryOpen.value) return
+  // While the dictionary or the Add-to-Playlist popup is open, none of
+  // this screen's shortcuts should fire - each has its own separate
+  // Escape-to-close handling.
+  if (isDictionaryOpen.value || isAddToPlaylistOpen.value) return
 
   // EXPERIMENTAL Hands-Free mode - see above. Locks out every shortcut
   // while active, same as it locks out nearly every button.
-  if (handFreeModeEnabled.value) return
+  if (handFreeModeEnabled.value || handFreeRecordDoubleModeEnabled.value) return
 
   if (event.key === 'Escape' && speedPopoverOpen.value) {
     speedPopoverOpen.value = false
@@ -2265,6 +2396,61 @@ function handleBack() {
 }
 
 .auto-shadow-button.compact .shadow-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.playlist-icon {
+  display: inline-flex;
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+}
+
+.playlist-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Same base look as .auto-shadow-button/.capture-button, just never has an
+   .active state of its own (opening the popup isn't a toggled mode). */
+.playlist-add-button {
+  flex: 1 1 auto;
+  min-width: 6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.playlist-add-button:active {
+  transform: scale(0.98);
+}
+
+.playlist-add-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.playlist-add-button.compact {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.72rem;
+  gap: 0.3rem;
+}
+
+.playlist-add-button.compact .playlist-icon {
   width: 0.9rem;
   height: 0.9rem;
 }

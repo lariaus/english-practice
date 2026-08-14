@@ -68,6 +68,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { getSet, getToReviewCards, sendReviewResults } from '../engine/flashcardsClient.js'
 import { FlashcardsReviewEngine } from '../engine/flashcardsReviewEngine.js'
+import { clearReviewProgress, loadReviewProgress, saveReviewProgress } from '../engine/flashcardsSessionProgress.js'
 import { today } from '../engine/flashcardsToday.js'
 import { BATCH_SIZE } from '../engine/flashcardsConstants.js'
 import { cleanWord } from '../engine/wordTokenizer.js'
@@ -122,13 +123,35 @@ const progressDots = computed(() => {
   }))
 })
 
+// Snapshot of everything needed to resume this exact session later - see
+// docs/flashcards-spec.md's "Resuming Learn/Review" section.
+function snapshotState() {
+  return {
+    queue: engine.queueEntries,
+    results: engine.results,
+    lastGradeByUid: [...lastGradeByUid.entries()],
+  }
+}
+
 onMounted(async () => {
   try {
     const todayStr = today()
     const [set, dueUids] = await Promise.all([getSet(props.setName), getToReviewCards(props.setName, todayStr)])
     cardsByUid = new Map(set.cards.map((c) => [c.uid, c]))
-    const batch = dueUids.slice(0, BATCH_SIZE)
-    engine = new FlashcardsReviewEngine(batch)
+
+    const saved = await loadReviewProgress(props.setName)
+    if (saved) {
+      // Trusts the saved state is still valid rather than re-checking each
+      // uid here - staleness is handled eagerly wherever the set's cards
+      // change (add/edit/delete/import/reset all discard it immediately),
+      // so a saved entry reaching this point is always safe to resume as-is.
+      engine = FlashcardsReviewEngine.restore(saved.queue, saved.results)
+      lastGradeByUid = new Map(saved.lastGradeByUid)
+    } else {
+      const batch = dueUids.slice(0, BATCH_SIZE)
+      engine = new FlashcardsReviewEngine(batch)
+      if (!engine.isDone) await saveReviewProgress(props.setName, snapshotState())
+    }
   } catch (e) {
     error.value = e.message
   } finally {
@@ -150,12 +173,17 @@ function handleWordClick(token, event) {
   emit('show-word', cleaned)
 }
 
+// Returns whether the submission actually succeeded - handleGrade() needs
+// to know, since the resume cache should only be cleared once the results
+// are safely on the server, not just because the batch finished locally.
 async function submitResults() {
-  if (!engine || engine.results.length === 0) return
+  if (!engine || engine.results.length === 0) return true
   try {
     await sendReviewResults(props.setName, today(), engine.results)
+    return true
   } catch (e) {
     showToast(e.message, { type: 'error' })
+    return false
   }
 }
 
@@ -165,7 +193,13 @@ async function handleGrade(button) {
   flipped.value = false
   version.value += 1
 
-  if (engine.isDone) await submitResults()
+  if (!engine.isDone) {
+    await saveReviewProgress(props.setName, snapshotState())
+    return
+  }
+
+  const submitted = await submitResults()
+  if (submitted) await clearReviewProgress(props.setName)
 }
 
 async function handleBack() {

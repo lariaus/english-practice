@@ -24,6 +24,7 @@ import {
   importCsv,
   listSets,
 } from './flashcardsClient.js'
+import { clearAllProgressForSet } from './flashcardsSessionProgress.js'
 
 const map = StorageMap.get('flashcards')
 const SET_LIST_KEY = 'set-list'
@@ -96,10 +97,17 @@ export async function deleteSetCached(name) {
       names.filter((n) => n !== name),
     )
     await map.delete(setKey(name))
+    await clearAllProgressForSet(name)
   } catch {
     // Best-effort, see createSetCached().
   }
 }
+
+// Every mutating function below also discards any resumable Learn/Review
+// session for this set (see flashcardsSessionProgress.js) - a saved
+// session's queue can reference a uid that no longer exists, or front/back
+// text that's now stale, so it's simplest and safest to just invalidate it
+// outright rather than trying to patch around exactly what changed.
 
 export async function addCardCached(setName, { front, back }) {
   const uid = await addCard(setName, { front, back })
@@ -107,6 +115,7 @@ export async function addCardCached(setName, { front, back }) {
     const cached = (await getCachedSet(setName)) ?? { name: setName, cards: [] }
     cached.cards.push({ uid, front, back })
     await map.set(setKey(setName), cached)
+    await clearAllProgressForSet(setName)
   } catch {
     // Best-effort, see createSetCached().
   }
@@ -123,6 +132,7 @@ export async function editCardCached(setName, uid, { front, back }) {
       card.back = back
       await map.set(setKey(setName), cached)
     }
+    await clearAllProgressForSet(setName)
   } catch {
     // Best-effort, see createSetCached().
   }
@@ -137,6 +147,7 @@ export async function deleteCardCached(setName, uid) {
       cached.cards = cached.cards.filter((c) => c.uid !== uid)
       await map.set(setKey(setName), cached)
     }
+    await clearAllProgressForSet(setName)
   } catch {
     // Best-effort, see createSetCached().
   }
@@ -147,6 +158,7 @@ export async function importCsvCached(setName, csvText) {
   const set = await importCsv(setName, csvText)
   try {
     await map.set(setKey(setName), { name: setName, cards: reduceCards(set.cards) })
+    await clearAllProgressForSet(setName)
   } catch {
     // Best-effort, see createSetCached().
   }

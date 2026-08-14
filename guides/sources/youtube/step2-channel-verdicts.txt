@@ -1,17 +1,15 @@
 STEP 2 RESULTS — Criteria filtering for shadowing channels
-Total: 163  |  Pass: 88  |  Fail: 75
+Total: 160  |  Pass: 85  |  Fail: 75
 
 ======================================================================
-PASS (88)
+PASS (85)
 ======================================================================
+
+
 
 - deepfocuslens
     https://www.youtube.com/@deepfocuslens
     Borderline - solo host 'Maggie' doing casual movie talking-head reviews; no bio confirms nationality/accent, but no foreign-origin red flags surfaced either
-
-- Chris Stuckmann
-    https://www.youtube.com/@chrisstuckmann
-    Solo host, confirmed American, born and raised in the Akron/Boston Heights, Ohio area; clear neutral accent, talking-head film reviews with no guest format
 
 - Sean Chandler Talks About
     https://www.youtube.com/@SeanChandlerTalksAbout
@@ -237,14 +235,6 @@ PASS (88)
     https://www.youtube.com/@Asianometry
     Solo narrator/creator 'Jon Y,' American-born Chinese; per his own interviews he grew up in Southern California, did undergrad/MBA at UC Berkeley before relocating to Taipei
 
-- Company Man
-    https://www.youtube.com/@companyman114
-    Single host/creator 'Mike' narrates all videos alone in a faceless documentary style, no interview/guest format found; multiple sources describe him as an American YouTuber
-
-- Primal Space
-    https://www.youtube.com/@primalspace
-    Borderline - written/produced by Scottish creator Ewan Cunningham, who stays invisible and hired an American narrator ('Beau') to voice every video; no guests, fully narrated documentary style
-
 - Stewart Hicks
     https://www.youtube.com/@stewarthicks
     Single recurring host, architecture professor Stewart Hicks, doing solo talking-head explainer videos with no guest/interview format; from Ann Arbor, Michigan, University of Illinois Chicago professor
@@ -356,6 +346,65 @@ PASS (88)
 - Peter Santenello
     https://www.youtube.com/@PeterSantenello
     Added by user, kept as PASS per their own judgment. Info: American-born, but format leans interview-heavy - talks with a different local stranger in nearly every video
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ======================================================================
 FAIL (75)

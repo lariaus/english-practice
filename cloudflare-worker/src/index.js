@@ -1,6 +1,6 @@
 // Cloudflare Worker backing the app's cross-device sync (see
 // cloudflare-worker/README.md for setup). First use case: replaces
-// ytHistory.js's localStorage-backed "last 5 videos" list with the same
+// ytHistory.js's localStorage-backed "last 100 videos" list with the same
 // data living in one shared KV entry instead, so it's the same on every
 // device rather than per-browser.
 //
@@ -14,8 +14,9 @@
 // plan.
 
 import { handleFlashcardsRequest } from './flashcardsRoutes.js'
+import { handlePlaylistsRequest } from './playlistsRoutes.js'
 
-const HISTORY_LIMIT = 5
+const HISTORY_LIMIT = 100
 const HISTORY_KEY = 'history'
 
 // PUT/DELETE are only used by Flashcards' routes (editing/deleting a card
@@ -92,6 +93,11 @@ export default {
 
     if (url.pathname.startsWith('/flashcards/')) {
       const response = await handleFlashcardsRequest(request, env, url)
+      if (response) return response
+    }
+
+    if (url.pathname.startsWith('/playlists')) {
+      const response = await handlePlaylistsRequest(request, env, url)
       if (response) return response
     }
 

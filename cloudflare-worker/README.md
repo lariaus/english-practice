@@ -1,11 +1,14 @@
 # Cloudflare Worker (sync backend)
 
-Small Worker + KV backend for cross-device sync. First use case: the "last 5
+Small Worker + KV backend for cross-device sync. First use case: the "last 100
 videos" history (`src/engine/ytHistory.js`), moving it from per-browser
 `localStorage` to one shared KV entry. Second use case: Flashcards (see
 `docs/flashcards-spec.md`) - one KV key per set, plus a small index key
 listing set names, in its own `FLASHCARDS` namespace (kept separate from
-`HISTORY` so the two features' KV write-rate limits never compete).
+`HISTORY` so the two features' KV write-rate limits never compete). Third
+use case: YT Shadowing Playlists (see `docs/yt-shadowing-spec.md`) - same
+one-key-per-item-plus-index shape as Flashcards, in its own `PLAYLISTS`
+namespace for the same write-rate-isolation reason.
 
 No auth check at all - the Worker's URL itself is never committed to this
 repo (entered manually per device in the app's own settings screen
@@ -36,6 +39,15 @@ account/login setup - this is just the commands specific to this Worker.
    Copy the printed `id` into a second entry in `kv_namespaces` with
    `"binding": "FLASHCARDS"`.
 
+   Playlists needs its own third namespace, done the same way:
+
+   ```sh
+   npx wrangler kv namespace create PLAYLISTS --config cloudflare-worker/wrangler.jsonc
+   ```
+
+   Copy the printed `id` into a third entry in `kv_namespaces` with
+   `"binding": "PLAYLISTS"`.
+
 2. Deploy:
 
    ```sh
@@ -59,10 +71,10 @@ remote data) unless `--remote` is passed.
 
 No auth header required - see the note above.
 
-- `GET /history` - returns the history array (newest first, max 5), each entry
+- `GET /history` - returns the history array (newest first, max 100), each entry
   shaped `{ videoId, url, title, author, duration, currentPosition }`.
 - `POST /history` - body `{ videoId, url, title, author?, duration?, currentPosition? }`;
-  moves it to the front (no duplicates), trims to 5, returns the updated array.
+  moves it to the front (no duplicates), trims to 100, returns the updated array.
   `currentPosition` is protected: omit it (as the client does when a video
   starts) to leave whatever was last recorded untouched; send a real number
   (as the client does when a session ends - Back, or the page closing/
@@ -113,3 +125,25 @@ Full data model/algorithm reference: `docs/flashcards-spec.md` and
 `today`/`due` are plain calendar-date strings (`"2026-01-28"`), never a
 timestamp - see `docs/flashcards-spec.md`'s "Dates, not timestamps"
 section for why.
+
+### Playlists
+
+Full data model reference: `docs/yt-shadowing-spec.md`'s "Playlists"
+section. Every route below 404s on an unknown `:name`/`:videoId` except
+where noted; `create_playlist`/`rename_playlist` 409 on a name collision
+(renaming to a playlist's own current name is a recognized no-op, not a
+collision).
+
+- `GET /playlists` -> `list[{name, updatedAt}]`, sorted by `updatedAt`
+  descending.
+- `POST /playlists` - body `{ name }` -> the created
+  `{ name, videos: [], updatedAt }`.
+- `GET /playlists/:name` -> the full playlist.
+- `PUT /playlists/:name` - body `{ newName }` -> the renamed playlist.
+- `DELETE /playlists/:name` -> `{ status: 'ok' }`.
+- `POST /playlists/:name/videos` - body
+  `{ videoId, url, title, author?, duration? }` ->
+  `{ playlist, added: boolean }`. `added` is `false` (not an error) if
+  `videoId` was already in this playlist - no reorder, no `updatedAt`
+  bump either way in that case.
+- `DELETE /playlists/:name/videos/:videoId` -> `{ status: 'ok' }`.

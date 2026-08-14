@@ -85,6 +85,12 @@ export class RobotShadowingEngine {
     this._onVisibilityChange = () => {
       if (document.visibilityState === 'visible' && this.stream && !this._stopRequested) {
         this._acquireWakeLock()
+        // Backgrounding can suspend the AudioContext even mid-session (the
+        // wake lock only stops the screen auto-locking, not the OS from
+        // suspending audio if the app itself gets backgrounded) - without
+        // this, beeps/playback would just silently stop working for the
+        // rest of the loop instead of resuming once foregrounded again.
+        this._ensureAudioContext()
       }
     }
 
@@ -385,7 +391,11 @@ export class RobotShadowingEngine {
       if (!AudioContextClass) return
       this._audioCtx = new AudioContextClass()
     }
-    if (this._audioCtx.state === 'suspended') {
+    // WebKit has a non-standard 'interrupted' state (backgrounding, Siri,
+    // phone calls) on top of the standard 'suspended' - missing it here
+    // meant a mid-session interruption on iOS never even attempted to
+    // resume, silently killing beeps/playback for the rest of the loop.
+    if (this._audioCtx.state === 'suspended' || this._audioCtx.state === 'interrupted') {
       this._audioCtx.resume().catch(() => {})
     }
   }

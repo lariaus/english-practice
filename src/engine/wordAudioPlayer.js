@@ -17,7 +17,7 @@
 //      dictionary entry only has UK/AU audio and no US recording.
 
 import { fetchWordInfo } from './dictionaryClient.js'
-import { TTSEngine } from './ttsEngine.js'
+import { TTSEngine, trackAudioPlaybackSeconds } from './ttsEngine.js'
 
 export function playAudioUrl(url, rate = 1) {
   if (!url) return
@@ -36,8 +36,11 @@ export function playAudioUrlTimed(url) {
       return
     }
     const audio = new Audio(url)
-    const startedAt = Date.now()
-    const finish = () => resolve(Math.max(0.5, (Date.now() - startedAt) / 1000))
+    const tracker = trackAudioPlaybackSeconds(audio)
+    const finish = () => {
+      tracker.stop()
+      resolve(tracker.elapsedSeconds())
+    }
     audio.addEventListener('ended', finish)
     audio.addEventListener('error', finish)
     audio.play().catch(finish)

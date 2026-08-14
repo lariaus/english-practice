@@ -1,6 +1,6 @@
 # Cross-device sync - full pipeline
 
-The complete story of how a piece of app state (today: the "last 5 videos"
+The complete story of how a piece of app state (today: the "last 100 videos"
 history) gets from one device to another: why it exists, every step of
 setting it up, how data actually flows end-to-end when the app is used, and
 the code underneath each piece. For the general "when should a feature use
@@ -262,7 +262,7 @@ Three moments this screen talks to history, all in one file:
    of how the video was opened (History click or a freshly pasted URL) -
    the screen only ever checks "is there a saved position for this
    `videoId`," not how it got here. Only works if the video is still within
-   the current top-5 (reuses the existing list endpoint rather than adding
+   the current top-100 (reuses the existing list endpoint rather than adding
    a dedicated lookup).
 
 ## Cost

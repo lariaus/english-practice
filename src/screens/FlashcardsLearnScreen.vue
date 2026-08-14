@@ -68,6 +68,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { getSet, markCardsLearned } from '../engine/flashcardsClient.js'
 import { FlashcardsLearningEngine } from '../engine/flashcardsLearningEngine.js'
+import { clearLearnProgress, loadLearnProgress, saveLearnProgress } from '../engine/flashcardsSessionProgress.js'
 import { today } from '../engine/flashcardsToday.js'
 import { BATCH_SIZE } from '../engine/flashcardsConstants.js'
 import { cleanWord } from '../engine/wordTokenizer.js'
@@ -131,13 +132,35 @@ function shuffle(array) {
   return copy
 }
 
+// Snapshot of everything needed to resume this exact session later - see
+// docs/flashcards-spec.md's "Resuming Learn/Review" section.
+function snapshotState() {
+  return {
+    queue: engine.queueEntries,
+    learned: engine.learnedCards,
+    lastGradeByUid: [...lastGradeByUid.entries()],
+  }
+}
+
 onMounted(async () => {
   try {
     const set = await getSet(props.setName)
     const newCards = set.cards.filter((c) => c.state === 'NEW')
     cardsByUid = new Map(newCards.map((c) => [c.uid, c]))
-    const batch = shuffle(newCards).slice(0, BATCH_SIZE).map((c) => c.uid)
-    engine = new FlashcardsLearningEngine(batch)
+
+    const saved = await loadLearnProgress(props.setName)
+    if (saved) {
+      // Trusts the saved state is still valid rather than re-checking each
+      // uid here - staleness is handled eagerly wherever the set's cards
+      // change (add/edit/delete/import/reset all discard it immediately),
+      // so a saved entry reaching this point is always safe to resume as-is.
+      engine = FlashcardsLearningEngine.restore(saved.queue, saved.learned)
+      lastGradeByUid = new Map(saved.lastGradeByUid)
+    } else {
+      const batch = shuffle(newCards).slice(0, BATCH_SIZE).map((c) => c.uid)
+      engine = new FlashcardsLearningEngine(batch)
+      if (!engine.isDone) await saveLearnProgress(props.setName, snapshotState())
+    }
   } catch (e) {
     error.value = e.message
   } finally {
@@ -165,12 +188,21 @@ async function handleGrade(button) {
   flipped.value = false
   version.value += 1
 
-  if (engine.isDone && engine.learnedCards.length > 0) {
-    try {
-      await markCardsLearned(props.setName, today(), engine.learnedCards)
-    } catch (e) {
-      showToast(e.message, { type: 'error' })
-    }
+  if (!engine.isDone) {
+    await saveLearnProgress(props.setName, snapshotState())
+    return
+  }
+
+  if (engine.learnedCards.length === 0) {
+    await clearLearnProgress(props.setName)
+    return
+  }
+
+  try {
+    await markCardsLearned(props.setName, today(), engine.learnedCards)
+    await clearLearnProgress(props.setName)
+  } catch (e) {
+    showToast(e.message, { type: 'error' })
   }
 }
 

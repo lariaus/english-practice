@@ -9,7 +9,7 @@ mark yourself. A companion feature lets you click any word in the
 transcript to see its definition/pronunciation.
 
 Two screens: **`YtShadowingFormScreen.vue`** (paste a URL, or reopen one of
-the last 5 videos from history) → **`YtShadowingPlayerScreen.vue`**
+the last 100 videos from history) → **`YtShadowingPlayerScreen.vue`**
 (everything below), matching the app's established two-screen pattern
 (same shape as Recorder Loop's duration-picker → session screens).
 
@@ -214,8 +214,10 @@ once the clip finishes (used by the popup's own Shadow flow - see
 
 ## History
 
-The last 5 distinct videos watched show on the form screen, each rendered
-as a single (wrapping) line: `Title - Author (duration) (progress%)`.
+The last 100 distinct videos watched show on the form screen, in a
+scrollable bordered list (fixed max height, not something that grows the
+whole page) since that many entries would otherwise be unwieldy. Each entry
+renders as a single (wrapping) line: `Title - Author (duration) (progress%)`.
 Title is truncated to 50 characters + `...` before anything else is
 appended, so a long title can never crowd the trailing info off the line;
 author and duration only appear once known, and progress only once it's at
@@ -232,7 +234,7 @@ the tool to work.
 
 - **Starting a video** (a history click, or pasting the same URL again)
   sends title/author/current duration to the Worker, moving that entry to
-  the front (deduped by video ID, trimmed to 5) - any previously-recorded
+  the front (deduped by video ID, trimmed to 100) - any previously-recorded
   watch position is left untouched by this write.
 - **Ending a session** - the in-app Back button, or the page actually
   closing/reloading/backgrounding - sends the real current position,
@@ -242,9 +244,68 @@ the tool to work.
   `visibilitychange` listener going hidden (backgrounding - the only signal
   iOS Safari reliably gives before it may suspend/kill the tab outright).
 - **Starting a video again**, if a saved position ≥ 5 seconds exists for it
-  in the current top-5, playback silently seeks there once the player is
+  in the current top-100, playback silently seeks there once the player is
   ready - no prompt, and it doesn't matter whether the video was reopened
   from history or a freshly pasted URL.
+
+## Playlists
+
+User-created named collections of videos, shown on the form screen next to
+History (see `docs/cross-device-sync.md`/`docs/setup-cloudflare.md` for the
+same underlying Worker+KV pipeline as History, in its own `PLAYLISTS`
+namespace - kept separate so its write-rate budget never competes with
+History's or Flashcards'). Each playlist stores `{name, videos, updatedAt}`;
+each video is `{videoId, url, title, author, duration}` - deliberately
+**no position field**. A playlist video's progress is always looked up live
+from the current History list by `videoId` at display time (falling back to
+the playlist's own frozen `duration` and no progress segment at all if
+that video isn't in History) - this also means a playlist row and a
+History row for the same video can never disagree on progress just because
+the "true" duration changed sometime after the video was added to the
+playlist. Title/author staying frozen at add-time forever is an accepted,
+cosmetic-only tradeoff (same as Flashcards accepts for its own data).
+
+- **Creating/renaming/deleting** a playlist, and **adding/removing** a
+  video, all live in the same panel on the form screen. Renaming has no
+  precedent elsewhere in this app (Flashcards sets can't be renamed) - an
+  inline pencil-to-text-input-with-Save/Cancel affordance, one row open at
+  a time.
+- **Adding the currently-open video** to a playlist happens from a button
+  on the player screen's control bar (hidden until the video's title has
+  actually loaded), opening a small popup: pick an existing playlist by
+  name, or create a new one inline and add to it immediately. Adding a
+  video already in that playlist is a deliberate **no-op** - no reorder,
+  no `updatedAt` bump - with a toast (`Video already in "<name>"`) instead
+  of the usual success toast (`Added to "<name>"`).
+- **Viewing a playlist's videos** (clicking its name) drills into a
+  dedicated view of just that playlist (newest-added-first) with a Back
+  link, rather than expanding in place - clicking a video there loads it
+  into the player exactly like a History row does.
+- **No cap** on videos-per-playlist or playlist count, unlike History's
+  fixed limit - a playlist only grows from deliberate user action, so it's
+  self-limiting; the only real ceiling is KV's per-value size limit (see
+  the Storage discussion in `flashcards-spec.md`), a non-issue at any
+  realistic scale.
+- **Client error-handling is a deliberate hybrid**
+  (`src/engine/ytPlaylistsClient.js`), not a clean copy of either existing
+  convention: listing playlists stays silent/best-effort like History
+  (`[]` on any failure - the panel just doesn't populate, consistent with
+  History's own section quietly not rendering right beside it), while
+  fetching one playlist's videos and every mutation (create/rename/delete/
+  add/remove) throw, like Flashcards - these are explicit user actions
+  that need real pass/fail feedback (toasts, confirm dialogs), and a
+  network blip on the drill-in view shows a real error rather than a
+  false "this playlist is empty."
+- **Worker-side write ordering matters** here in a way it doesn't for
+  Flashcards' index: every mutation writes the playlist's own KV key
+  *before* touching the shared `playlists:index` key, so a failure on the
+  index write only ever produces a stale sort position (self-heals on the
+  next mutation), never a playlist appearing edited when nothing about it
+  actually changed. Renaming specifically writes the new key, updates the
+  index, then deletes the old key last - a crash mid-rename leaves at
+  worst a harmless orphaned key, never a lost playlist. A rename to a
+  playlist's own current name is a recognized no-op, not a false
+  name-collision error.
 
 ## Architecture fit
 
@@ -257,7 +318,19 @@ the tool to work.
   companion server), `ytHistory.js` (talks to the Cloudflare Worker sync
   backend - see "History" above and `docs/cross-device-sync.md`; reads the
   configured server URL via `syncConfig.js`, an app-wide setting owned by
-  `SettingsScreen.vue`, not by this tool).
+  `SettingsScreen.vue`, not by this tool), `ytPlaylistsClient.js` (same
+  Worker, `/playlists` routes - see "Playlists" above for its deliberately
+  hybrid silent-list/throwing-mutations convention), `ytVideoFormat.js`
+  (the shared `formatTime`/`truncateTitle`/`formatVideoLine` used by both
+  History rows and Playlist video rows).
+- Component: `AddToPlaylistPopup.vue` - locally owned by
+  `YtShadowingPlayerScreen.vue` (not a global singleton like
+  `DictionaryPopup.vue`), see `docs/common-design-philosophy.md`'s "Modal
+  popups" section.
+- Worker: `cloudflare-worker/src/playlistsStore.js` +
+  `cloudflare-worker/src/playlistsRoutes.js`, mirroring
+  `flashcardsStore.js`/`flashcardsRoutes.js`'s shape closely (own KV
+  namespace, `matchRoute`-based dispatch) - see "Playlists" above.
 - Composables: `useRecordShadow.js` - the Record/Shadow mic-engine plumbing
   (toggle, R/S/L + S/R/L/P labels, shift/long-press double-pass detection)
   shared by every Record+Shadow pair in the app. What one Shadow *pass*

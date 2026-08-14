@@ -54,4 +54,32 @@ describe('FlashcardsLearningEngine', () => {
     engine.grade('EASY') // card 2 - learned
     expect(engine.learnedCards).toEqual([{ uid: 2, grade: 'EASY' }])
   })
+
+  it('queueEntries reflects each card\'s current streak, not just its uid', () => {
+    const engine = new FlashcardsLearningEngine([1, 2])
+    engine.grade('GOOD') // card 1: streak -> 1, back of pool -> queue is [2, 1]
+    expect(engine.queueEntries).toEqual([{ uid: 2, streak: 0 }, { uid: 1, streak: 1 }])
+  })
+
+  it('restore() reconstructs a mid-streak session that behaves exactly like a fresh one', () => {
+    const original = new FlashcardsLearningEngine([1, 2])
+    original.grade('GOOD') // card 1: streak -> 1, back of pool -> queue is [2, 1]
+
+    const restored = FlashcardsLearningEngine.restore(original.queueEntries, original.learnedCards)
+    expect(restored.queueUids).toEqual(original.queueUids)
+    expect(restored.learnedCards).toEqual(original.learnedCards)
+
+    restored.grade('HARD') // card 2: back of pool -> queue is [1, 2]
+    restored.grade('GOOD') // card 1: streak -> 2 -> learned
+    expect(restored.learnedCards).toEqual([{ uid: 1, grade: 'GOOD' }])
+  })
+
+  it('restore() produces an independent copy, not a reference to the saved arrays', () => {
+    const savedQueue = [{ uid: 1, streak: 1 }]
+    const savedLearned = [{ uid: 2, grade: 'EASY' }]
+    const restored = FlashcardsLearningEngine.restore(savedQueue, savedLearned)
+    restored.grade('GOOD') // would mutate a shared array in place if not copied
+    expect(savedQueue).toEqual([{ uid: 1, streak: 1 }])
+    expect(savedLearned).toEqual([{ uid: 2, grade: 'EASY' }])
+  })
 })
