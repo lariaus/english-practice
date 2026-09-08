@@ -1,22 +1,30 @@
-# Local Storage (`StorageMap`)
+# Local Storage (`StorageMap`, `ServerData`)
 
-A key→JSON-value storage system for small, per-device app data (settings,
-"where you left off," the one existing example being the sync server URL -
-see `docs/setup-cloudflare.md`). Not to be confused with the [Online shared
+Two local (per-device) storage systems, for two different data shapes, both
+backed by `native-server` (the same C++ server that serves this app's own
+files and YouTube captions - see `native-server/README.md`) instead of the
+browser's `localStorage`:
+
+- **`StorageMap`** - small key→JSON-value data the client both reads and
+  writes (settings, "where you left off" - the one existing example being
+  the sync server URL, see `docs/setup-cloudflare.md`).
+- **`ServerData`** - arbitrary files that `native-server` itself writes
+  (e.g. a downloaded/cached file) and the web app only ever reads back, via
+  a plain static HTTP route - no client write path at all. See its own
+  section below.
+
+Neither is to be confused with the [Online shared
 storage](common-design-philosophy.md#online-shared-storage) pattern
 (Cloudflare Worker + KV) - that's for data that should look the same across
-devices; this is for data that lives on one device only, backed by
-`native-server` (the same C++ server that serves this app's own files and
-YouTube captions - see `native-server/README.md`) instead of the browser's
-`localStorage`, wherever `native-server` is actually running the page.
+devices; both of these are for data that lives on one device only.
 
 ## Why not just `localStorage`
 
 `localStorage` works fine inside a single `WKWebView`/browser tab, but this
 app runs the *same* frontend across multiple genuinely different
-environments - a plain browser tab (GitHub Pages), the CLI-served page, and
-the Mac/iOS app's embedded `WKWebView` - and `localStorage` is scoped per
-origin/webview, not shared or backed up in any useful way on-device.
+environments - the CLI-served page and the Mac/iOS app's embedded
+`WKWebView` - and `localStorage` is scoped per origin/webview, not shared
+or backed up in any useful way on-device.
 Routing small persistent data through `native-server` instead means it
 lives in one real file, next to (and readable/inspectable the same way as)
 everything else the server already manages, and is included in the OS's
@@ -43,21 +51,17 @@ await map.delete('sync-server-url')
 - Values are arbitrary JSON (objects, arrays, strings, numbers, booleans) -
   no manual `JSON.stringify`/`parse` at call sites, unlike raw
   `localStorage`.
-- **Exactly one backing store is active per session**, decided once:
-  `isNativeServerAvailable()` (`nativeServerClient.js`) does a single `GET
-  /health` check, cached for the app's lifetime and shared with the
-  captions feature. If it succeeds, every `StorageMap` call for the rest of
-  the session goes over the network to `native-server`. If it fails (e.g.
-  plain GitHub Pages with no server at all), every call falls back to
-  `localStorage` instead, for the whole session. There's no dual-write, no
-  client-side cache of server values, and no switching mid-session - each
-  call is a real round trip when the server is available, so the server's
-  file is always the live source of truth from the frontend's point of
-  view.
-- Both paths are best-effort: a failed request/parse logs (via
-  `appLog.js`, see the in-app Logs screen under Settings) and resolves to
-  `null`/does nothing, rather than throwing. Nothing in the app should ever
-  be unusable because this layer failed.
+- **Always backed by `native-server`** - every real usage pattern (the
+  native Mac/iOS app, or the web app served locally via `native_server_cli`)
+  has native-server serving the page in the first place, so it's always
+  reachable; there's no `localStorage` fallback to fall back to. No
+  dual-write, no client-side cache of server values - each call is a real
+  round trip, so the server's file is always the live source of truth from
+  the frontend's point of view.
+- Best-effort on failure: a failed request/parse logs (via `appLog.js`,
+  see the in-app Logs screen under Settings) and resolves to `null`/does
+  nothing, rather than throwing. Nothing in the app should ever be
+  unusable because this layer failed.
 
 ### 2. Server routes: `native_server_core/lib/storage_route.cpp`
 
@@ -117,11 +121,60 @@ Either way, the actual on-disk shape is identical: `<dataDir>/storage_map/
 <mapId>.json`, one file per map, e.g. `.app_data/storage_map/core.json`
 for the CLI.
 
+## `ServerData`
+
+The asymmetric counterpart to `StorageMap`: files that `native-server`
+itself writes directly (not via any client-facing write API) and the web
+app only ever reads back, over a plain static HTTP route - not a
+JSON-key-value API like `StorageMap`'s.
+
+### 1. Storage engine: `native-server/server_data/`
+
+`ServerDataStore`, constructed with a base directory:
+
+- `bool exists(relativePath) const`
+- `void write(relativePath, bytes) const` - creates parent directories as
+  needed, and writes atomically (temp file in the same directory, then
+  `std::filesystem::rename`) so a concurrent HTTP reader hitting the static
+  route (below) never sees a partially-written file. Always overwrites -
+  `ServerDataStore` itself has no cache policy of its own; a caller wanting
+  "only download once" checks `exists()` first and decides for itself.
+- `resolve(relativePath) const` - the absolute filesystem path a relative
+  path maps to, exposed for callers that need it (e.g. to check size/mtime)
+  without re-deriving `<dataDir>/server_data/<relativePath>` themselves.
+- Rejects any relative path that's absolute, or contains a `..` segment -
+  a plain `baseDir / relativePath` join would otherwise let an absolute
+  `relativePath` silently discard `baseDir` entirely (documented
+  `std::filesystem::path` behavior), or let `..` escape the intended tree.
+- `ServerDataStore::write()` is a convenience, not a mandatory gate - other
+  server-side code is free to write under `<dataDir>/server_data/` with
+  plain C/C++ file APIs directly if that's more convenient; nothing enforces
+  going through this class.
+- Covered by `native-server/tests/unit/test_server_data_store.cpp`
+  (round-trip, nested directory creation, overwrite, path-traversal/
+  absolute-path rejection, and that only the final file is ever visible on
+  disk after a write - never a leftover `.tmp*`).
+
+### 2. Reading it back: a static HTTP mount
+
+**Not yet wired up as of this writing** - the plan is a plain
+`svr.set_mount_point("/server_data", (dataDir / "server_data").string())`
+in `server.cpp`'s `registerRoutes()`, right alongside the existing `"/"` →
+`dist/` mount (same cpp-httplib mechanism, no new route-handling code).
+Once added, the web app reads a cached file by just using
+`/server_data/<relativePath>` directly as a URL (e.g. an `<audio src>`) -
+no fetch, no JSON parsing, no JS client needed, since there's nothing to
+write from that side.
+
+### On-disk location
+
+Same `dataDir` as `StorageMap` (see below) - `<dataDir>/server_data/
+<relativePath>`, sibling to `<dataDir>/storage_map/`.
+
 ## TODO: `StorageDatabase` / `StorageFileSystem` (not implemented)
 
-`StorageMap` was originally planned as one of three local storage shapes;
-only it was actually built so far, since it's the only one any current
-feature needs. The other two remain ideas, not implementations:
+`StorageMap` and `ServerData` were two of three originally-planned local
+storage shapes; the third remains an idea, not an implementation:
 
 - **`StorageDatabase`** - a bigger, more structured store for data that
   outgrows a flat key→JSON-value map (real querying, not just point
@@ -129,15 +182,16 @@ feature needs. The other two remain ideas, not implementations:
   `StorageMap`, there's no reasonable way to emulate this shape on top of
   `localStorage`, so it would simply be unavailable when `native-server`
   isn't reachable.
-- **`StorageFileSystem`** - a real filesystem-like API (list a directory,
-  list files, read/write a file) for on-device files rather than JSON
-  values. Same deal - no `localStorage` fallback, unavailable without
-  `native-server`.
 
-Neither has a `dataDir` layout, server route, or JS client yet - if/when
-one is actually needed, it should follow the same four-layer shape as
-`StorageMap` above (independent C++ lib + unit tests, server route + tests,
-JS client), living alongside `storage_map/` rather than inside it.
+Don't confuse this with `ServerData` above, despite the similar-sounding
+original name (`StorageFileSystem`): `StorageDatabase` would still be a
+client-read/write API (like `StorageMap`, just more structured), whereas
+`ServerData` is deliberately asymmetric - only `native-server` itself
+writes, the client only ever reads. `ServerData` was built because a real,
+narrower need for that asymmetric shape came up (see
+`docs/dictionary-spec.md` once it's finalized); a generic client-read/write
+file API remains unbuilt, and should follow `StorageMap`'s four-layer shape
+if it's ever actually needed.
 
 ## Current usage
 
@@ -163,12 +217,15 @@ Any future setting that needs to persist per-device (not synced, per
 should reach for `StorageMap.get(<mapId>)` directly rather than adding
 another one-off `localStorage` call.
 
+`ServerData` has no wired-up consumer yet as of this writing - it's built
+and tested, but nothing calls `ServerDataStore::write()` in production code
+yet, and the static route to read files back doesn't exist yet either (see
+above).
+
 ## File map
 
 - `src/engine/storageMap.js` - the frontend client (`StorageMap.get(mapId)` →
-  `get`/`set`/`delete`), and its `localStorage` fallback
-- `src/engine/nativeServerClient.js` - `isNativeServerAvailable()`, the
-  cached, shared reachability check
+  `get`/`set`/`delete`)
 - `src/engine/syncConfig.js` - the one real caller so far, plus its
   synchronous-cache wrapper
 - `native-server/native_server_core/lib/storage_route.h`/`.cpp` - the HTTP
@@ -179,6 +236,10 @@ another one-off `localStorage` call.
 - `native-server/tests/unit/test_storage_map.cpp`,
   `native-server/tests/integration/test_storage_route.cpp` - Catch2
   coverage for both layers
+- `native-server/server_data/include/server_data/server_data_store.h`,
+  `native-server/server_data/lib/server_data_store.cpp` - `ServerDataStore`
+- `native-server/tests/unit/test_server_data_store.cpp` - its Catch2
+  coverage
 - `english-practice-app/english-practice-app/english_practice_appApp.swift` -
   where the Mac/iOS app resolves and creates its `dataDir`
 - `native-server/native_server_cli_lib/lib/cli_config.cpp`,

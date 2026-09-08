@@ -458,6 +458,17 @@ currently **inert** - pressing any one just advances to the next random
 card without affecting scheduling in any way. TODO for a future version.
 No progress dots here - there's no fixed batch to track progress through.
 
+A `Loop` button in the header (next to the `Practice` title) switches into
+**ShadowLoopMode** - a hands-free loop that repeatedly picks a random card
+and runs a play → beep → record → beep → play-back cycle automatically,
+with Repeat count and Repeat model options mirroring Robot Shadowing's own.
+Fully independent of this screen's normal browse flow (its own random
+selection, not the shuffled deck/index above) - entering/exiting it doesn't
+touch or reset that state. See `docs/shadow-loop-mode-spec.md` for the full
+behavior; built generically enough that YT Shadowing's player screen reuses
+the same underlying engine and UI over its own transcript vocabulary
+instead of a card set.
+
 ## Edit mode
 
 Where cards get added, edited, and deleted (not a separate "add" mode).
@@ -606,11 +617,13 @@ face, so its mic session stays consistent regardless of flip state). Front
 and back each get their own mic session, entirely independent of each
 other; nothing is shown under the blurred placeholder, since there's
 nothing to play/record/shadow yet. Play speaks that half's full text as
-one phrase (not per-word) via plain TTS, deliberately **not** the
-dictionary API's pronunciation-clip lookup (`playWordPronunciation` in
-`wordAudioPlayer.js`) - a flashcard face is often a whole phrase, not a
-single dictionary word, so there's no real pronunciation clip to prefer in
-the first place. Record and Shadow reuse the exact same infrastructure as
+one phrase (not per-word). When that text is a single word, it prefers the
+same real dictionary pronunciation audio the Dictionary popup uses
+(`playWordPronunciation`/`playWordPronunciationTimed` in
+`wordAudioPlayer.js` - real US audio first, Google TTS fallback); a
+multi-word phrase has no single dictionary entry to look up, so it goes
+straight to plain TTS (`playTextAloud`/`playTextAloudTimed`). Record and
+Shadow reuse the exact same infrastructure as
 everywhere else in the app (`useRecordShadow.js`/`RecordShadowButtons.vue`,
 also used by YT Shadowing and the Dictionary popup) - Shadow plays the
 text aloud, records for that duration + 0.25s, then plays the recording

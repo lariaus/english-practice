@@ -26,9 +26,22 @@
 		CA1100000000000000000002 /* dist */ = {isa = PBXFileReference; lastKnownFileType = folder; name = dist; path = ../dist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		CA1100000000000000000004 /* Exceptions for "english-practice-app" folder in "English Practice" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B0FAB8ED301FB4F000B2342F /* English Practice */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B0FAB8F0301FB4F000B2342F /* english-practice-app */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CA1100000000000000000004 /* Exceptions for "english-practice-app" folder in "English Practice" target */,
+			);
 			path = "english-practice-app";
 			sourceTree = "<group>";
 		};
@@ -350,6 +363,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "english-practice-app/english_practice_app.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"english-practice-app/Preview Content\"";
@@ -358,8 +372,10 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/../native-server/native_server_core/include";
+				INFOPLIST_FILE = "english-practice-app/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "English Practice";
 				INFOPLIST_KEY_CFBundleName = "English Practice";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Used to sync dictionary data packs from another device (like your Mac) on the same WiFi network.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs microphone access to record your voice for pronunciation practice.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -383,6 +399,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "lariaus.english-practice-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -399,6 +416,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "english-practice-app/english_practice_app.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"english-practice-app/Preview Content\"";
@@ -407,8 +425,10 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/../native-server/native_server_core/include";
+				INFOPLIST_FILE = "english-practice-app/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "English Practice";
 				INFOPLIST_KEY_CFBundleName = "English Practice";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Used to sync dictionary data packs from another device (like your Mac) on the same WiFi network.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs microphone access to record your voice for pronunciation practice.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -432,6 +452,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "lariaus.english-practice-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;

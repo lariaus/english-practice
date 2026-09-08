@@ -166,15 +166,22 @@ const {
 // quietly kicking off a fresh recording after the popup is already gone.
 let popupClosed = false
 
-// One play-word / record / listen-to-yourself pass - the word's own clip is
-// played up front (unlike YT Shadowing's video segment, its length is known
-// as soon as it's played), and that same elapsed length + 0.25s becomes the
-// recording window, so there's no separate "how long should I record"
-// guess to make.
+// One play-word / beep / record / beep / listen-to-yourself pass - the
+// word's own clip is played up front (unlike YT Shadowing's video segment,
+// its length is known as soon as it's played), and that same elapsed
+// length + 0.75s becomes the recording window, so there's no separate "how
+// long should I record" guess to make. A beep (the same one the double-
+// record transition already uses) marks each transition - into recording,
+// and out of it into playback - so it's always clear which phase is
+// active without having to watch the button's own state change.
 async function runWordShadowPass() {
   const elapsedSeconds = await playWordPronunciationTimed(currentWord.value)
   if (popupClosed) return
-  const blob = await micEngine.recordFor(elapsedSeconds + 0.25)
+  await micEngine.playBeep()
+  if (popupClosed) return
+  const blob = await micEngine.recordFor(elapsedSeconds + 0.75)
+  if (popupClosed) return
+  await micEngine.playBeep()
   if (popupClosed) return
   if (blob) await micEngine.playBlob(blob)
 }
@@ -213,6 +220,14 @@ onBeforeUnmount(() => {
 // Shared by showWord() and a search-mode lookup - fetches and displays one
 // word's info. Doesn't touch `mode` itself, so a search-mode lookup stays in
 // search mode (search bar still visible) rather than becoming word mode.
+//
+// Two-phase: a cheap fast=true lookup shows the GUI almost immediately
+// (definitions only, no real audio), then a fast=false lookup runs in the
+// background and silently replaces it once real pronunciation audio is
+// available. playWordOnOpen's auto-play is deliberately deferred until
+// after the full lookup completes - firing it any earlier would race
+// fetchWordInfo's own cache and trigger a second, concurrent full lookup
+// (the original double-request bug).
 async function loadWordInfo(word, { playWordOnOpen = false } = {}) {
   popupClosed = false
   loading.value = true
@@ -220,19 +235,25 @@ async function loadWordInfo(word, { playWordOnOpen = false } = {}) {
   info.value = null
   currentWord.value = word
 
-  // Fired immediately, independent of the definitions fetch below, so the
-  // sound plays "as soon as it's looked up" rather than waiting on whatever
-  // else is still loading.
-  if (playWordOnOpen) playWordPronunciation(word)
-
-  const result = await fetchWordInfo(word)
-
+  const fastResult = await fetchWordInfo(word, 'en', { fast: true })
+  // currentWord check: a newer loadWordInfo() call (a different word) may
+  // have started while this one was still in flight - popupClosed alone
+  // doesn't catch that case, only a fully-closed popup.
+  if (popupClosed || currentWord.value !== word) return
   loading.value = false
-  if (!result) {
-    error.value = `No definition found for "${word}".`
-    return
+  if (fastResult) info.value = fastResult
+  else error.value = `No definition found for "${word}".`
+
+  const fullResult = await fetchWordInfo(word, 'en', { fast: false })
+  if (popupClosed || currentWord.value !== word) return
+  if (fullResult) {
+    info.value = fullResult
+    error.value = null
   }
-  info.value = result
+  // else: the full lookup found nothing new (or failed) after the fast one
+  // already succeeded - keep showing the fast data, no error surfaced.
+
+  if (playWordOnOpen) playWordPronunciation(word)
 }
 
 // Word mode - opened for one specific word (a transcript click today), no

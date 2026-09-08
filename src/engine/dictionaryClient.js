@@ -1,94 +1,142 @@
 // Fetches word info (phonetics, definitions) for the click-a-word popup,
-// shared across the app (not just YT Shadowing). Caches results in memory
-// so re-looking-up the same word never re-fetches for the rest of the
-// session. Only the Free Dictionary API (dictionaryapi.dev) for now - more
-// sources (e.g. Merriam-Webster) may be added later behind this same
-// fetchWordInfo() interface. Each phonetic entry carries its own audio URL
-// (when available) - actually playing it is the view layer's job.
+// shared across the app (not just YT Shadowing). Backed by native-server's
+// own /dictionary route (see native-server/native_server_core/lib/
+// dictionary_route.cpp) rather than calling a public dictionary API
+// directly - that used to be api.dictionaryapi.dev, which turned out to be
+// permanently dead (unmaintained since 2023) and CORS-blocked whenever it
+// did respond. native-server now does the real lookup itself (Free
+// Dictionary API + Wiktionary, merged) and caches pronunciation audio to
+// disk, serving it back at /server_data/<path>. The server returns every
+// phonetics row unfiltered, in source order - finalizePhoneticsRows below
+// (deduping, capping unlabeled rows, US-first sorting) is a display concern
+// handled here rather than server-side. Caches results in memory so
+// re-looking-up the same word never re-fetches for the rest of the session
+// (only completed, non-fast lookups are cached, not in-flight promises - a
+// known, deliberately-deferred inefficiency: two near-simultaneous callers
+// for the same word each trigger their own request). A `fast` result is
+// never cached - see fetchWordInfo below. Each phonetic entry carries
+// its own audio URL (when available) - actually playing it is the view
+// layer's job.
 
-const API_BASE = 'https://api.dictionaryapi.dev/api/v2/entries'
+import { log } from './appLog.js'
 
 const cache = new Map()
 
-const REGION_LABELS = { us: 'US', uk: 'UK', au: 'AU' }
+// Generous, but not literally worst-case-safe: the server can issue up to
+// ~5 sequential upstream HTTP calls on a cache miss (Free Dictionary API,
+// up to 3 Wiktionary calls, plus an audio download), each with its own
+// independent 15s server-side timeout - a pathologically slow-but-not-
+// quite-failing chain could still exceed this. Accepted for now, same
+// trade-off nativeServerClient.js's own SUBTITLES_TIMEOUT_MS already makes
+// for a similar multi-step server call - revisit if the server side ever
+// parallelizes those calls.
+const DICTIONARY_TIMEOUT_MS = 25000
 
-// Phonetics entries pair a `text` transcription with an `audio` file in the
-// same object - when that audio filename ends in e.g. "-us.mp3" it's
-// reliably that dialect's transcription. Not every entry has an audio file
-// to key off of, so those are kept unlabeled rather than guessing a dialect
-// from the IPA symbols themselves. Different dialects sometimes share the
-// exact same transcription text (e.g. "screen" is spelled /skɹiːn/ in both
-// its AU and US audio entries) - those are NOT duplicates and must both be
-// kept, so entries are deduped on (text, label) together, never on text
-// alone. Only an unlabeled entry whose text exactly matches an already-
-// labeled entry is dropped, since it adds no information the labeled
-// version doesn't already cover. US is always sorted first when present;
-// everything else keeps its original order.
-function pickPhonetics(phonetics) {
-  const entries = []
-  const seenKeys = new Set()
+// Small, fully generic AbortController wrapper - duplicated here rather
+// than imported from nativeServerClient.js, matching this codebase's
+// convention of duplicating small, self-contained, stateless helpers
+// rather than centralizing them.
+async function fetchWithTimeout(url, timeoutMs) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { signal: controller.signal })
+  } finally {
+    clearTimeout(timeout)
+  }
+}
 
-  for (const p of phonetics) {
-    if (!p.text) continue
-    const match = p.audio?.match(/-(\w+)\.mp3$/)
-    const label = (match && REGION_LABELS[match[1]]) || ''
-    const key = `${p.text}|${label}`
-    if (seenKeys.has(key)) continue
-    seenKeys.add(key)
-    entries.push({ text: p.text, label, audio: p.audio || null })
+// Display-side cleanup of the raw phonetics list the server returns
+// (native-server deliberately returns every row unfiltered, in source
+// order - see dictionary_entry_detail.h): dedup on exact (text, label)
+// pairs, then cap unlabeled ("unknown accent") rows to just the first one
+// seen - some words (e.g. "people") list many near-identical unlabeled
+// transcriptions (dialectal spelling variants, alternate romanizations)
+// that are noise once a labeled US/UK/AU row already exists - and always
+// place that one surviving unlabeled row after every labeled row,
+// US-labeled row(s) sorted first.
+function finalizePhoneticsRows(rows) {
+  const deduped = []
+  for (const row of rows) {
+    const isDuplicate = deduped.some((d) => d.text === row.text && d.label === row.label)
+    if (!isDuplicate) deduped.push(row)
   }
 
-  const labeledTexts = new Set(entries.filter((e) => e.label).map((e) => e.text))
-  const deduped = entries.filter((e) => e.label || !labeledTexts.has(e.text))
+  const labeled = []
+  let firstUnlabeled = null
+  for (const row of deduped) {
+    if (!row.label) {
+      if (!firstUnlabeled) firstUnlabeled = row
+    } else {
+      labeled.push(row)
+    }
+  }
 
-  return deduped.sort((a, b) => {
-    if (a.label === 'US') return -1
-    if (b.label === 'US') return 1
-    return 0
-  })
+  // Array.prototype.sort is stable (ECMAScript 2019+, every evergreen
+  // browser) - non-US rows keep their relative source order.
+  labeled.sort((a, b) => (b.label === 'US') - (a.label === 'US'))
+
+  if (firstUnlabeled) labeled.push(firstUnlabeled)
+
+  return labeled
 }
 
 // Returns a normalized { word, phonetics, usPhonetics, meanings, sourceUrl,
-// license } object, or null if nothing was found (unknown word, network
-// error, etc).
-export async function fetchWordInfo(word, lang = 'en') {
+// license } object, or null if nothing was found (unknown word, native-
+// server unreachable, network error, timeout, malformed response, etc).
+//
+// `fast`, when true, asks the server for its cheap fastFetch mode (Free
+// Dictionary API only - no Wiktionary lookup, no real pronunciation audio,
+// no server-side entry-cache write) - see DictionaryPopup.vue's two-phase
+// loading. A fast result is deliberately never written to `cache` below, so
+// a later non-fast call for the same word still does the real lookup - a
+// pre-existing full cache entry, though, still short-circuits a fast
+// request too, since that's strictly better data anyway.
+export async function fetchWordInfo(word, lang = 'en', { fast = false } = {}) {
   const key = `${lang}:${word.trim().toLowerCase()}`
   if (cache.has(key)) return cache.get(key)
 
+  const params = new URLSearchParams({ word, lang, fast: fast ? 'true' : 'false' })
+  const requestUrl = `/dictionary?${params}`
+
   let data
   try {
-    const response = await fetch(`${API_BASE}/${lang}/${encodeURIComponent(word)}`)
-    if (!response.ok) return null
+    const response = await fetchWithTimeout(requestUrl, DICTIONARY_TIMEOUT_MS)
+    if (!response.ok) {
+      const body = await response.json().catch(() => null)
+      log('[Dictionary] request failed:', response.status, body?.error)
+      return null
+    }
     data = await response.json()
-  } catch {
+  } catch (err) {
+    log('[Dictionary] request errored:', requestUrl, err.message)
     return null
   }
 
-  const entry = Array.isArray(data) ? data[0] : null
-  if (!entry) return null
-
-  const phonetics = pickPhonetics(entry.phonetics || [])
+  const phonetics = finalizePhoneticsRows(
+    (data.phonetics || []).map((p) => ({
+      text: p.text,
+      label: p.label,
+      audio: p.audio ? `/server_data/${p.audio}` : null,
+    }))
+  )
 
   const result = {
-    word: entry.word,
+    word: data.word,
     phonetics,
-    // pickPhonetics() always sorts a US entry first when one exists, so
-    // this is just "is there one at all" - kept as its own field since the
-    // header display cares about exactly one thing: is there a US
-    // transcription to show, or not.
-    usPhonetics: phonetics[0]?.label === 'US' ? phonetics[0] : null,
-    meanings: (entry.meanings || []).map((meaning) => ({
+    usPhonetics: phonetics.find((p) => p.label === 'US') || null,
+    meanings: (data.meanings || []).map((meaning) => ({
       partOfSpeech: meaning.partOfSpeech,
       definitions: (meaning.definitions || []).map((def) => ({
         definition: def.definition,
-        example: def.example || null,
+        example: def.examples?.[0] || null,
         synonyms: def.synonyms || [],
       })),
     })),
-    sourceUrl: entry.sourceUrls?.[0] || null,
-    license: entry.license?.name || null,
+    sourceUrl: data.sourceUrl || null,
+    license: data.license || null,
   }
 
-  cache.set(key, result)
+  if (!fast) cache.set(key, result)
   return result
 }

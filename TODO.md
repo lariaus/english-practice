@@ -37,6 +37,10 @@
 
 ### Dictionary
 
+- [ ]  [P1] Fix some bugs with audio not found (eg some words have regional pronunciations).
+- [ ]  [P2] Fix some bugs with IPA text not found (not sure why)
+- [ ]  [P2] Find a way to pack download set of words (eg most used 20k words, and add way to transfer to iphone DB).
+- [ ]  [P3] Try the webster-dictionary API instead.
 - [ ]  [P3] When a word is not found, add a “did you mean …” with list of closest words (see possible implementation details in `docs/dictionary-spec.md`)
 
 ### Flashcards
@@ -46,10 +50,12 @@
 - [x]  Need algorithms for paced repetition
 - [x]  Saved with cloud storage
 - [x]  Build an actual real set of words for intonation
-- [ ]  [P1] Fix / figure out the dictionary audio issue (audio is most important)
+- [x]  [P0] Add a beap and slightmy more time for shadowing.
+- [ ]  [P0] Fix the half speed more (long press doesn't work ?)
 - [ ]  [P2] Add new ways options / filter / etc to control a lot more the “Practice Mode”.
-- [ ]  [P2] The "Practice Mode" could also have an hand-free mode (random word, shadow. But not so random, based on difficulty/ results).
 - [ ]  [P2] Have new ways to add new words to flashcards directly from YT shadowing or other apps
+- [ ]  [P2] Figure out a way to automatically have good IPAs and stop writing it myself.
+- [ ]  [P3] The Loop mode for practice shouldn't chose words randomly, based on the flaschards learning status.
 
 ### [WIP] Phonemes
 
@@ -66,7 +72,7 @@
 
 ### General Features
 
-- [ ]  [P2] Fix the issue with the html / JS etc being cached (not reloaded) between builds on iOS.
+- [x]  [P2] Fix the issue with the html / JS etc being cached (not reloaded) between builds on iOS.
 - [ ]  [P2] Fix the mic / audio reconnection issue (infos in `docs/mic-audio-issues`)
 
 ## Future Ideas

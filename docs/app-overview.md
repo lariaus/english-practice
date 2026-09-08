@@ -48,8 +48,10 @@ one of them) live in `common-design-philosophy.md`.
 ## Tech Stack & Architecture
 
 - **Framework: Vue 3** using `<script setup>` (Composition API), built with
-  **Vite**. No backend, no server-rendered anything — pure client-side SPA,
-  static output deployable to GitHub Pages.
+  **Vite**. No server-rendered anything — pure client-side SPA, its static
+  `dist/` output served locally by native-server (either standalone via
+  `native_server_cli`, or embedded in the Mac/iOS app) rather than
+  published anywhere public.
 - **Why Vue**: the app is view-light and API-heavy — most of the complexity
   is in `getUserMedia` / `MediaRecorder` / Wake Lock orchestration, not in UI
   composition. Vue is small (~15-20KB gzipped runtime) and doesn't force any
@@ -69,7 +71,7 @@ one of them) live in `common-design-philosophy.md`.
   build step ideally" — that's superseded now that we're using Vue SFCs,
   which require a Vite build. Accepted tradeoff for better long-term
   architecture. Output of `vite build` is a plain static `dist/` folder,
-  which is what gets deployed to GitHub Pages.
+  served locally by native-server rather than published anywhere.
 
 ## Local Development & Testing
 
@@ -96,15 +98,10 @@ transform) is not the day-to-day way this gets tested on-device either way:
   exposure and no tunnel needed for this path, since the `WKWebView` and
   the server it's talking to are both local to the same device/process.
 
-## Hosting (production)
-
-- **GitHub Pages** — free static hosting, HTTPS by default, no server
-  maintenance. A GitHub Actions workflow (`.github/workflows/deploy.yml`)
-  builds and publishes `dist/` automatically on every push to `main` — see
-  the README for the one-time repo setting and the live URL.
-- "Add to Home Screen" support is in place: a web app manifest, Apple meta
-  tags, and a generated icon set (`public/icons/`), so it launches
-  standalone on iOS (full-screen, own icon, no Safari chrome).
+"Add to Home Screen" support is in place for the browser-served path above:
+a web app manifest, Apple meta tags, and a generated icon set
+(`public/icons/`), so it launches standalone on iOS (full-screen, own icon,
+no Safari chrome).
 
 ## Backend & local storage
 
@@ -134,7 +131,5 @@ state) for when there's no connection - see `flashcards-spec.md`'s
 - Accounts (still no user/login concept anywhere in the app).
 - A full router library, state management library (Vuex/Pinia), or other
   infrastructure not yet justified by the app's current size.
-- Service worker caching for the GitHub-Pages-hosted web build — decided
-  not needed; offline support is instead pursued via the native Mac/iOS
-  app (see "Backend & local storage" above), not a web-platform PWA
-  caching layer.
+- Service worker/PWA caching - offline support is instead pursued via the
+  native Mac/iOS app (see "Backend & local storage" above).

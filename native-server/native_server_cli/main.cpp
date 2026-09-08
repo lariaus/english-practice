@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
   } catch (const native_server_cli::ConfigError& e) {
     std::cerr << "native-server: " << e.what() << "\n";
     std::cerr << "usage: native_server_cli --dir <path> [--host <host>] [--port <port>] "
-                 "[--data-dir <path>]\n";
+                 "[--data-dir <path>] [--shared-data-dir <path>]\n";
     return 1;
   }
 
@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
   options.port = config.port;
   options.rootDir = std::filesystem::absolute(config.dir);
   options.dataDir = std::filesystem::absolute(config.dataDir);
+  options.sharedDataDir = std::filesystem::absolute(config.sharedDataDir);
   options.enableStdoutLogging = true;
 
   std::unique_ptr<native_server::Server> server;

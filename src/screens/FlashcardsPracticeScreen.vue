@@ -6,12 +6,24 @@
       <div class="screen-header">
         <button class="back-button" @click="$emit('back')">&larr; Back</button>
         <h1>Practice</h1>
-        <span class="screen-header-spacer"></span>
+        <button v-if="currentCard" class="back-button" @click="toggleLoopMode">
+          {{ inLoopMode ? 'Exit' : 'Loop' }}
+        </button>
+        <span v-else class="screen-header-spacer"></span>
       </div>
 
       <p v-if="error" class="error-message">{{ error }}</p>
       <p v-else-if="loading" class="subtitle">Loading…</p>
       <p v-else-if="!currentCard" class="subtitle">This set has no cards yet.</p>
+
+      <template v-else-if="inLoopMode">
+        <ShadowLoopPanel :items="loopItems" :speak="speakLoopItem">
+          <template #current-item="{ item }">
+            <FlashcardText :text="item.front" @word-click="handleWordClick" />
+            <FlashcardText :text="item.back" @word-click="handleWordClick" />
+          </template>
+        </ShadowLoopPanel>
+      </template>
 
       <template v-else-if="editing">
         <input class="text-input" v-model="editFront" placeholder="Front" />
@@ -82,11 +94,14 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { deleteCardCached, editCardCached, getSetOrCached } from '../engine/flashcardsOfflineCache.js'
+import { stripAnnotations } from '../engine/flashcardAnnotationSegmenter.js'
 import { cleanWord } from '../engine/wordTokenizer.js'
-import { useFlashcardFaceAudio } from '../composables/useFlashcardFaceAudio.js'
+import { playTextAloudTimed, playWordPronunciationTimed } from '../engine/wordAudioPlayer.js'
+import { isSingleWord, useFlashcardFaceAudio } from '../composables/useFlashcardFaceAudio.js'
 import { showToast } from '../composables/useToast.js'
 import FaceAudioControls from '../components/FaceAudioControls.vue'
 import FlashcardText from '../components/FlashcardText.vue'
+import ShadowLoopPanel from '../components/ShadowLoopPanel.vue'
 
 const props = defineProps({
   setName: { type: String, required: true },
@@ -110,6 +125,39 @@ const currentCard = computed(() => cards.value[index.value] ?? null)
 
 const frontAudio = useFlashcardFaceAudio(() => currentCard.value.front)
 const backAudio = useFlashcardFaceAudio(() => currentCard.value.back)
+
+// ShadowLoopMode - see docs/shadow-loop-mode-spec.md. Independent of the
+// normal practice flow above (its own random selection, not the shuffled
+// cards/index used for flipping/grading) - entering/exiting it never
+// touches that state. ShadowLoopPanel owns the actual loop engine/UI;
+// toggling inLoopMode off unmounts it, which stops and cleans up any
+// active run automatically (see ShadowLoopPanel.vue's own doc comment) -
+// no manual stop() call needed here.
+const inLoopMode = ref(false)
+
+function toggleLoopMode() {
+  inLoopMode.value = !inLoopMode.value
+}
+
+// Rebuilt fresh each time loop mode is entered, from the same `cards`
+// array the normal practice flow already holds.
+const loopItems = computed(() =>
+  cards.value.map((card) => ({
+    front: card.front,
+    back: card.back,
+    speakableText: stripAnnotations(card.front),
+  })),
+)
+
+// Front only drives audio (the back is shown for reference only, never
+// spoken/shadowed) - same real-audio-vs-TTS dispatch useFlashcardFaceAudio
+// itself uses for a single Shadow button, applied here to whichever random
+// item the loop is currently on.
+async function speakLoopItem(item) {
+  return isSingleWord(item.speakableText)
+    ? await playWordPronunciationTimed(item.speakableText)
+    : await playTextAloudTimed(item.speakableText)
+}
 
 function shuffle(array) {
   const copy = [...array]

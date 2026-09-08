@@ -33,6 +33,7 @@
     <p v-if="testStatus === 'error'" class="test-message test-error">✗ Could not reach server</p>
 
     <button class="logs-link" @click="$emit('open-logs')">Logs</button>
+    <button class="logs-link" @click="$emit('open-data-packs')">Data Packs</button>
   </main>
 </template>
 
@@ -40,7 +41,7 @@
 import { onMounted, ref } from 'vue'
 import { getSyncServerUrl, setSyncServerUrl } from '../engine/syncConfig.js'
 
-defineEmits(['back', 'open-logs'])
+defineEmits(['back', 'open-logs', 'open-data-packs'])
 
 const serverUrl = ref('')
 const saved = ref(false)

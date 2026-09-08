@@ -10,9 +10,12 @@
     v-else-if="screen.name === 'settings'"
     @back="goHome"
     @open-logs="goToLogs"
+    @open-data-packs="goToDataPacks"
   />
 
   <LogsScreen v-else-if="screen.name === 'logs'" @back="goToSettings" />
+
+  <DataPacksScreen v-else-if="screen.name === 'data-packs'" @back="goToSettings" />
 
   <DurationPickerScreen
     v-else-if="screen.name === 'recorder-loop-duration'"
@@ -101,6 +104,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import HomeScreen from './screens/HomeScreen.vue'
 import SettingsScreen from './screens/SettingsScreen.vue'
 import LogsScreen from './screens/LogsScreen.vue'
+import DataPacksScreen from './screens/DataPacksScreen.vue'
 import DurationPickerScreen from './screens/DurationPickerScreen.vue'
 import RecorderLoopSessionScreen from './screens/RecorderLoopSessionScreen.vue'
 import RobotShadowingSessionScreen from './screens/RobotShadowingSessionScreen.vue'
@@ -196,6 +200,10 @@ function goToSettings() {
 
 function goToLogs() {
   screen.value = { name: 'logs' }
+}
+
+function goToDataPacks() {
+  screen.value = { name: 'data-packs' }
 }
 
 function goToRecorderDurationPicker() {

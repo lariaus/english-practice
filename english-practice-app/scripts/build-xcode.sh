@@ -49,19 +49,27 @@ for ARCH in ${ARCHS}; do
     cmake --build "${ARCH_BUILD_DIR}" --target native_server_core
 
     # native_server_core now has real (non-header-only) static-library
-    # dependencies - youtube_utils, https_client, pugixml, storage_map -
-    # that Xcode's own linker has no way to discover on its own
-    # (OTHER_LDFLAGS is a fixed, hand-maintained list in the pbxproj, not
-    # derived from CMake's dependency graph). Merging them all into one
-    # archive here means Xcode's existing "-lnative_server_core" keeps
-    # working unchanged instead of needing every new C++ dependency added
-    # there by hand.
+    # dependencies - youtube_utils, https_client, pugixml, storage_map,
+    # dictionary_utils, server_data, data_packs - that Xcode's own linker
+    # has no way to discover on its own (OTHER_LDFLAGS is a fixed,
+    # hand-maintained list in the pbxproj, not derived from CMake's
+    # dependency graph). Merging them all into one archive here means
+    # Xcode's existing "-lnative_server_core" keeps working unchanged
+    # instead of needing every new C++ dependency added there by hand. This
+    # list must be kept in sync with native_server_core's own
+    # target_link_libraries (see native_server_core/CMakeLists.txt) - a
+    # library added there but not here builds fine (still part of the same
+    # CMake target graph) but fails at Xcode link time with "Undefined
+    # symbol" for anything only that new library defines.
     MERGED_LIB="${ARCH_BUILD_DIR}/libnative_server_core_merged.a"
     libtool -static -o "${MERGED_LIB}" \
         "${ARCH_BUILD_DIR}/native_server_core/libnative_server_core.a" \
         "${ARCH_BUILD_DIR}/youtube_utils/libyoutube_utils.a" \
         "${ARCH_BUILD_DIR}/https_client/libhttps_client.a" \
         "${ARCH_BUILD_DIR}/storage_map/libstorage_map.a" \
+        "${ARCH_BUILD_DIR}/dictionary_utils/libdictionary_utils.a" \
+        "${ARCH_BUILD_DIR}/server_data/libserver_data.a" \
+        "${ARCH_BUILD_DIR}/data_packs/libdata_packs.a" \
         "${ARCH_BUILD_DIR}/_deps/pugixml-build/libpugixml.a"
 
     ARCH_LIBS="${ARCH_LIBS} ${MERGED_LIB}"

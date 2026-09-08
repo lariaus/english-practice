@@ -19,6 +19,7 @@ ResolvedConfig resolveConfig(const std::vector<std::string>& args, const EnvLook
   std::optional<std::string> cliPortStr;
   std::optional<std::string> cliDir;
   std::optional<std::string> cliDataDir;
+  std::optional<std::string> cliSharedDataDir;
 
   for (std::size_t i = 0; i < args.size(); ++i) {
     const std::string& arg = args[i];
@@ -35,6 +36,8 @@ ResolvedConfig resolveConfig(const std::vector<std::string>& args, const EnvLook
       cliDir = next();
     } else if (arg == "--data-dir") {
       cliDataDir = next();
+    } else if (arg == "--shared-data-dir") {
+      cliSharedDataDir = next();
     } else {
       throw ConfigError("Unknown argument: " + arg);
     }
@@ -65,6 +68,12 @@ ResolvedConfig resolveConfig(const std::vector<std::string>& args, const EnvLook
   std::optional<std::string> dataDir =
       cliDataDir ? cliDataDir : envOrNull(envLookup, "NATIVE_SERVER_DATA_DIR");
   config.dataDir = dataDir.value_or(".app_data");
+
+  // Same convention as dataDir above, just a different default - see
+  // docs/data-pack-sync.md.
+  std::optional<std::string> sharedDataDir =
+      cliSharedDataDir ? cliSharedDataDir : envOrNull(envLookup, "NATIVE_SERVER_SHARED_DATA_DIR");
+  config.sharedDataDir = sharedDataDir.value_or("shared_data");
 
   return config;
 }

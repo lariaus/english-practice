@@ -15,6 +15,11 @@ struct ResolvedConfig {
   // Unlike dir, has a default - not required to already exist (created on
   // first write), so there's nothing to fail without it.
   std::string dataDir;
+  // Backs /data-packs/... (see docs/data-pack-sync.md) - a dev-machine-only
+  // feature. Same "has a default, doesn't need to exist yet" shape as
+  // dataDir - the routes themselves treat a missing directory as "no packs
+  // available," not an error.
+  std::string sharedDataDir;
 };
 
 class ConfigError : public std::runtime_error {
@@ -27,11 +32,12 @@ using EnvLookup = std::function<const char*(const char*)>;
 // args excludes argv[0]. Throws ConfigError (with a human-readable message)
 // if the served directory can't be resolved from either --dir or
 // NATIVE_SERVER_DIR, or if an unknown flag/invalid port is given.
-// Precedence: CLI flag > env var > default (host/port/dataDir only - dir
-// has no default). dataDir defaults to ".app_data" - relative to the CWD
-// the CLI is invoked from (resolved to an absolute path in main.cpp),
-// not home-relative, matching the documented "run from the repo root"
-// usage.
+// Precedence: CLI flag > env var > default (host/port/dataDir/
+// sharedDataDir only - dir has no default). dataDir defaults to
+// ".app_data", sharedDataDir defaults to "shared_data" - both relative to
+// the CWD the CLI is invoked from (resolved to an absolute path in
+// main.cpp), not home-relative, matching the documented "run from the
+// repo root" usage.
 ResolvedConfig resolveConfig(const std::vector<std::string>& args, const EnvLookup& envLookup);
 
 }  // namespace native_server_cli

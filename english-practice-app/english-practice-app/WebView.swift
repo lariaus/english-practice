@@ -43,13 +43,28 @@ struct WebView {
     }
 }
 
+// The embedded webapp is rebuilt on every launch (see build-xcode.sh), but
+// WKWebView keeps its own on-disk HTTP cache across launches/reinstalls -
+// separate from (and unaffected by clearing) native-server's own
+// Application-Support-backed storage (StorageMap, synced packs, etc.), so
+// this never touches the Cloudflare Worker URL or anything else the user
+// has configured. Only disk/memory cache is cleared - not cookies/
+// localStorage/IndexedDB - and the load happens inside the completion
+// handler so it can't race the clear and hit stale cache anyway.
+private func loadFresh(_ webView: WKWebView, url: URL) {
+    let cacheTypes: Set<String> = [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache]
+    WKWebsiteDataStore.default().removeData(ofTypes: cacheTypes, modifiedSince: .distantPast) {
+        webView.load(URLRequest(url: url))
+    }
+}
+
 #if os(macOS)
 extension WebView: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView {
         let webView = WKWebView()
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
-        webView.load(URLRequest(url: url))
+        loadFresh(webView, url: url)
         return webView
     }
 
@@ -63,7 +78,7 @@ extension WebView: UIViewRepresentable {
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
-        webView.load(URLRequest(url: url))
+        loadFresh(webView, url: url)
         return webView
     }
 

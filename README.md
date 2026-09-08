@@ -1,7 +1,5 @@
 # English Practice
 
-Live at: <https://lariaus.github.io/english-practice/>
-
 A small collection of self-practice tools for English pronunciation. Starts
 with "Recorder Loop", a hands-free record → playback self-monitoring loop.
 
@@ -89,12 +87,6 @@ Run this command to retrieve the Cloudflare Worker URL:
 `native-server` persists small app data (e.g. the sync server URL) under
 `.app_data` (CLI, gitignored, override with `--data-dir`) or an internal
 app-managed directory (Mac/iOS app).
-
-## Deploy (Deprecated)
-
-Pushing to `main` auto-builds and publishes via GitHub Actions (see
-`.github/workflows/deploy.yml`). Live at:
-<https://lariaus.github.io/english-practice/>
 
 ## Export
 

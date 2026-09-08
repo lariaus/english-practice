@@ -21,6 +21,15 @@ target_link_libraries(native_server_test_storage_map PRIVATE
 )
 add_test(NAME native_server_test_storage_map COMMAND native_server_test_storage_map)
 
+add_executable(native_server_test_server_data_store
+  unit/test_server_data_store.cpp
+)
+target_link_libraries(native_server_test_server_data_store PRIVATE
+  server_data
+  Catch2::Catch2WithMain
+)
+add_test(NAME native_server_test_server_data_store COMMAND native_server_test_server_data_store)
+
 add_executable(native_server_test_config
   unit/test_config.cpp
 )
@@ -29,6 +38,15 @@ target_link_libraries(native_server_test_config PRIVATE
   Catch2::Catch2WithMain
 )
 add_test(NAME native_server_test_config COMMAND native_server_test_config)
+
+add_executable(native_server_test_data_packs
+  unit/test_data_packs.cpp
+)
+target_link_libraries(native_server_test_data_packs PRIVATE
+  data_packs
+  Catch2::Catch2WithMain
+)
+add_test(NAME native_server_test_data_packs COMMAND native_server_test_data_packs)
 
 add_executable(native_server_test_http_client
   unit/test_http_client.cpp
@@ -99,6 +117,22 @@ target_compile_definitions(native_server_test_subtitles_route PRIVATE
 )
 add_test(NAME native_server_test_subtitles_route COMMAND native_server_test_subtitles_route)
 
+add_executable(native_server_test_dictionary_route
+  integration/test_dictionary_route.cpp
+)
+target_include_directories(native_server_test_dictionary_route PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+target_link_libraries(native_server_test_dictionary_route PRIVATE
+  native_server_core
+  nlohmann_json::nlohmann_json
+  Catch2::Catch2WithMain
+)
+target_compile_definitions(native_server_test_dictionary_route PRIVATE
+  NATIVE_SERVER_TEST_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures"
+)
+add_test(NAME native_server_test_dictionary_route COMMAND native_server_test_dictionary_route)
+
 add_executable(native_server_test_storage_route
   integration/test_storage_route.cpp
 )
@@ -114,6 +148,22 @@ target_compile_definitions(native_server_test_storage_route PRIVATE
   NATIVE_SERVER_TEST_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures"
 )
 add_test(NAME native_server_test_storage_route COMMAND native_server_test_storage_route)
+
+add_executable(native_server_test_data_packs_route
+  integration/test_data_packs_route.cpp
+)
+target_include_directories(native_server_test_data_packs_route PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+target_link_libraries(native_server_test_data_packs_route PRIVATE
+  native_server_core
+  nlohmann_json::nlohmann_json
+  Catch2::Catch2WithMain
+)
+target_compile_definitions(native_server_test_data_packs_route PRIVATE
+  NATIVE_SERVER_TEST_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures"
+)
+add_test(NAME native_server_test_data_packs_route COMMAND native_server_test_data_packs_route)
 
 add_executable(native_server_test_concurrency
   concurrency/test_concurrency.cpp
@@ -193,6 +243,78 @@ target_link_libraries(native_server_test_youtube_utils_transcript_xml PRIVATE
   Catch2::Catch2WithMain
 )
 add_test(NAME native_server_test_youtube_utils_transcript_xml COMMAND native_server_test_youtube_utils_transcript_xml)
+
+add_executable(native_server_test_dictionary_utils_parsing
+  unit/test_dictionary_utils_parsing.cpp
+)
+target_include_directories(native_server_test_dictionary_utils_parsing PRIVATE
+  ${CMAKE_SOURCE_DIR}/dictionary_utils/lib
+)
+target_link_libraries(native_server_test_dictionary_utils_parsing PRIVATE
+  dictionary_utils
+  Catch2::Catch2WithMain
+)
+add_test(NAME native_server_test_dictionary_utils_parsing COMMAND native_server_test_dictionary_utils_parsing)
+
+add_executable(native_server_test_dictionary_utils_live
+  unit/test_dictionary_utils_live.cpp
+)
+target_include_directories(native_server_test_dictionary_utils_live PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+target_link_libraries(native_server_test_dictionary_utils_live PRIVATE
+  dictionary_utils
+  Catch2::Catch2WithMain
+)
+add_test(NAME native_server_test_dictionary_utils_live COMMAND native_server_test_dictionary_utils_live)
+
+add_executable(native_server_test_wiktionary_utils_parsing
+  unit/test_wiktionary_utils_parsing.cpp
+)
+target_include_directories(native_server_test_wiktionary_utils_parsing PRIVATE
+  ${CMAKE_SOURCE_DIR}/dictionary_utils/lib
+)
+target_link_libraries(native_server_test_wiktionary_utils_parsing PRIVATE
+  dictionary_utils
+  Catch2::Catch2WithMain
+)
+add_test(NAME native_server_test_wiktionary_utils_parsing COMMAND native_server_test_wiktionary_utils_parsing)
+
+add_executable(native_server_test_wiktionary_api_entry_live
+  unit/test_wiktionary_api_entry_live.cpp
+)
+target_include_directories(native_server_test_wiktionary_api_entry_live PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+target_link_libraries(native_server_test_wiktionary_api_entry_live PRIVATE
+  dictionary_utils
+  Catch2::Catch2WithMain
+)
+add_test(NAME native_server_test_wiktionary_api_entry_live COMMAND native_server_test_wiktionary_api_entry_live)
+
+add_executable(native_server_test_dictionary_entry_parsing
+  unit/test_dictionary_entry_parsing.cpp
+)
+target_include_directories(native_server_test_dictionary_entry_parsing PRIVATE
+  ${CMAKE_SOURCE_DIR}/dictionary_utils/lib
+)
+target_link_libraries(native_server_test_dictionary_entry_parsing PRIVATE
+  dictionary_utils
+  Catch2::Catch2WithMain
+)
+add_test(NAME native_server_test_dictionary_entry_parsing COMMAND native_server_test_dictionary_entry_parsing)
+
+add_executable(native_server_test_dictionary_entry_live
+  unit/test_dictionary_entry_live.cpp
+)
+target_include_directories(native_server_test_dictionary_entry_live PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+target_link_libraries(native_server_test_dictionary_entry_live PRIVATE
+  dictionary_utils
+  Catch2::Catch2WithMain
+)
+add_test(NAME native_server_test_dictionary_entry_live COMMAND native_server_test_dictionary_entry_live)
 
 add_executable(native_server_test_youtube_utils_parity
   unit/test_youtube_utils_parity.cpp

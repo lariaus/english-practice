@@ -155,11 +155,9 @@ to short state codes rather than full words:
     span (record length = that cue's own clamped length, speed-adjusted +
     1s, not a fixed duration), then advances cue by cue. Stops once it runs
     out of cues, even if video content continues past the last one.
-  - If no cues are available at all (native-server isn't reachable - e.g.
-    running from plain GitHub Pages hosting with no backing server at all
-    - or this video has no captions) - or subtitles were never turned on
-    and none could be found - falls back to the original fixed-window
-    behavior:
+  - If no cues are available at all (this video has no captions, or the
+    subtitles fetch failed) - or subtitles were never turned on and none
+    could be found - falls back to the original fixed-window behavior:
     consecutive 4s windows starting from the current position, continuing
     until the video ends.
 
@@ -186,8 +184,8 @@ lazily, on first toggle-on; toggling off/on again never re-fetches):
 
 Subtitles are fetched through **native-server** (see its own section
 below) - the same server already serving the app itself, not a separate
-process. Gracefully degrades to nothing visible only when the app isn't
-backed by native-server at all (e.g. plain GitHub Pages hosting).
+process. Gracefully degrades to nothing visible if the fetch fails or the
+video has no captions.
 
 ## Dictionary lookup
 
@@ -360,15 +358,16 @@ cosmetic-only tradeoff (same as Flashcards accepts for its own data).
 `native-server/` - the same C++ server that serves the app's own static
 files - also fetches YouTube captions on the app's behalf, since a browser
 can't read them directly (no CORS headers on YouTube's caption endpoint).
-Exposes `GET /health` and `GET /subtitles?url=...&lang=en`, matching what
-used to be a separate Python companion process (`native-exp-server/`,
-removed once this native C++ implementation reached parity). The app
-pings `/health` first
-and silently skips subtitle-dependent features if it's not reachable
-(e.g. when running from plain GitHub Pages hosting with no backing server
-at all) - never required for the rest of the app to work. See
-`native-server/README.md` for setup, and `docs/dictionnary_sources_research.md`
-for the research behind the dictionary/pronunciation feature choices.
+Exposes `GET /subtitles?url=...&lang=en`, matching what used to be a
+separate Python companion process (`native-exp-server/`, removed once
+this native C++ implementation reached parity). The app is always served
+by native-server itself (the native Mac/iOS app, or the web app via
+`native_server_cli`), so this is always reachable in practice - a genuine
+fetch failure or a video with no captions just silently skips
+subtitle-dependent features rather than erroring, never required for the
+rest of the app to work. See `native-server/README.md` for setup, and
+`docs/dictionnary_sources_research.md` for the research behind the
+dictionary/pronunciation feature choices.
 
 ## Explicitly out of scope / known limitations
 

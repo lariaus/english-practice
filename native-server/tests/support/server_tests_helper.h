@@ -25,16 +25,18 @@ inline std::filesystem::path makeTempDir() {
   return dir;
 }
 
-// dataDir defaults to empty - fine for tests that never hit /storage/...
-// (the registry is simply never written to).
+// dataDir/sharedDataDir both default to empty - fine for tests that never
+// hit /storage/... or /data-packs/... (the registry is simply never
+// written to; the pack routes just report "no packs available").
 inline std::unique_ptr<native_server::Server> startTestServer(
     uint16_t port, const std::filesystem::path& root = fixturesDir(),
-    const std::filesystem::path& dataDir = {}) {
+    const std::filesystem::path& dataDir = {}, const std::filesystem::path& sharedDataDir = {}) {
   native_server::ServerOptions options;
   options.host = kTestHost;
   options.port = port;
   options.rootDir = root;
   options.dataDir = dataDir;
+  options.sharedDataDir = sharedDataDir;
   auto server = std::make_unique<native_server::Server>(options);
   server->start();
   return server;

@@ -225,6 +225,12 @@ yet (one setting so far - the sync server URL, `syncConfig.js`), but the
 place to reach for next time rather than writing another bespoke
 `localStorage` call.
 
+A different shape entirely - real files that `native-server` itself writes
+(not the client) and the web app only reads back over a plain static HTTP
+route - is `ServerData` (`native-server/server_data/`), also covered in
+`docs/local-storage.md`. No JS client, since there's nothing for the
+client to write.
+
 ## File map
 
 - `src/composables/useShiftOrLongPress.js`

@@ -6,10 +6,12 @@
 // Shadow press, so it should read whatever the current card's front/back
 // is at press time (e.g. `() => currentCard.value.front`).
 //
-// Deliberately plain TTS via wordAudioPlayer.js's playTextAloud/
-// playTextAloudTimed, not playWordPronunciation - unlike a single
-// dictionary word, a flashcard face is often a whole phrase, so there's no
-// real dictionary audio clip to prefer in the first place.
+// A flashcard face is often a whole phrase ("voiture rouge"), which has no
+// real dictionary audio clip to prefer - only plain TTS makes sense there.
+// But when a face is a single word, it's worth preferring the same real
+// US pronunciation audio DictionaryPopup.vue uses (via wordAudioPlayer.js's
+// playWordPronunciation/playWordPronunciationTimed - dictionary audio
+// first, Google TTS fallback), rather than always going straight to TTS.
 //
 // Speaks/records the text with its IPA (/.../ ) and parenthetical (...)
 // annotations stripped out first (see flashcardAnnotationSegmenter.js) -
@@ -19,8 +21,20 @@
 // trio in that case rather than having it act on an empty phrase.
 import { computed, reactive } from 'vue'
 import { stripAnnotations } from '../engine/flashcardAnnotationSegmenter.js'
-import { playTextAloud, playTextAloudTimed } from '../engine/wordAudioPlayer.js'
+import {
+  playTextAloud,
+  playTextAloudTimed,
+  playWordPronunciation,
+  playWordPronunciationTimed,
+} from '../engine/wordAudioPlayer.js'
 import { useRecordShadow } from './useRecordShadow.js'
+
+// No whitespace left after trimming - a single word/token, not a phrase.
+// Exported since useShadowLoop.js's Flashcards integration needs the exact
+// same real-audio-vs-TTS dispatch rule for its own speak() callback.
+export function isSingleWord(text) {
+  return text.length > 0 && !/\s/.test(text.trim())
+}
 
 export function useFlashcardFaceAudio(getText) {
   const recordShadow = useRecordShadow()
@@ -30,15 +44,26 @@ export function useFlashcardFaceAudio(getText) {
   const hasSpeakableText = computed(() => speakableText.value.length > 0)
 
   function handlePlayClick() {
-    playTextAloud(speakableText.value)
+    if (isSingleWord(speakableText.value)) {
+      playWordPronunciation(speakableText.value)
+    } else {
+      playTextAloud(speakableText.value)
+    }
   }
 
-  // One play-phrase / record / listen-to-yourself pass - same sequence as
-  // DictionaryPopup.vue's runWordShadowPass(), just via plain TTS instead
-  // of a real dictionary audio clip.
+  // One play-phrase / beep / record / beep / listen-to-yourself pass - same
+  // sequence as DictionaryPopup.vue's runWordShadowPass(), preferring real
+  // dictionary audio for a single-word face the same way handlePlayClick
+  // does. The beep (the same one the double-record transition already
+  // uses) marks each transition - into recording, and out of it into
+  // playback.
   async function runShadowPass() {
-    const elapsedSeconds = await playTextAloudTimed(speakableText.value)
-    const blob = await micEngine.recordFor(elapsedSeconds + 0.25)
+    const elapsedSeconds = isSingleWord(speakableText.value)
+      ? await playWordPronunciationTimed(speakableText.value)
+      : await playTextAloudTimed(speakableText.value)
+    await micEngine.playBeep()
+    const blob = await micEngine.recordFor(elapsedSeconds + 0.75)
+    await micEngine.playBeep()
     if (blob) await micEngine.playBlob(blob)
   }
 

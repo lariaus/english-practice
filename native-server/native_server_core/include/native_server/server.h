@@ -17,6 +17,13 @@ struct ServerOptions {
   // routes are never actually used (e.g. existing tests unrelated to
   // storage).
   std::filesystem::path dataDir;
+  // Backs /data-packs/... (see docs/data-pack-sync.md) - a dev-machine-only
+  // feature. Left empty (the default) on every build except the CLI's own
+  // config, which is the only thing that ever populates it - the Mac/iOS
+  // app never sets this. An empty value means "no packs available," not an
+  // error - the routes handle that directly rather than requiring callers
+  // to avoid registering them.
+  std::filesystem::path sharedDataDir;
   bool enableStdoutLogging = false;
 };
 

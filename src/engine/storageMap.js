@@ -3,38 +3,12 @@
 // JSON.stringify/parse), with support for multiple independent named
 // maps. See docs/local-storage.md.
 //
-// Exactly one backing store is ever active at a time: if native-server
-// is reachable (checked once, see nativeServerClient.js), every call
-// goes over the network for the rest of the session - no client-side
-// caching, no dual-write. Only when native-server isn't reachable at all
-// does this fall back to localStorage instead, for the whole session.
+// Always backed by native-server - every real usage pattern (the native
+// Mac/iOS app, or the web app served locally via native_server_cli) has
+// native-server serving the page in the first place, so it's always
+// reachable.
 
 import { log } from './appLog.js'
-import { isNativeServerAvailable } from './nativeServerClient.js'
-
-function localStorageKeyFor(mapId) {
-  return `storage-map:${mapId}`
-}
-
-function readLocalStorageBlob(mapId) {
-  try {
-    const raw = localStorage.getItem(localStorageKeyFor(mapId))
-    if (!raw) return {}
-    const parsed = JSON.parse(raw)
-    return typeof parsed === 'object' && parsed !== null ? parsed : {}
-  } catch (err) {
-    log('[StorageMap] localStorage read failed:', mapId, err.message)
-    return {}
-  }
-}
-
-function writeLocalStorageBlob(mapId, blob) {
-  try {
-    localStorage.setItem(localStorageKeyFor(mapId), JSON.stringify(blob))
-  } catch (err) {
-    log('[StorageMap] localStorage write failed:', mapId, err.message)
-  }
-}
 
 class StorageMapHandle {
   constructor(mapId) {
@@ -43,11 +17,6 @@ class StorageMapHandle {
 
   // Returns the value (already parsed), or null if absent.
   async get(key) {
-    if (!(await isNativeServerAvailable())) {
-      const blob = readLocalStorageBlob(this._mapId)
-      return key in blob ? blob[key] : null
-    }
-
     try {
       const response = await fetch(`/storage/maps/${this._mapId}/${key}`)
       if (response.status === 404) {
@@ -66,13 +35,6 @@ class StorageMapHandle {
   }
 
   async set(key, value) {
-    if (!(await isNativeServerAvailable())) {
-      const blob = readLocalStorageBlob(this._mapId)
-      blob[key] = value
-      writeLocalStorageBlob(this._mapId, blob)
-      return
-    }
-
     try {
       const response = await fetch(`/storage/maps/${this._mapId}/${key}`, {
         method: 'PUT',
@@ -88,13 +50,6 @@ class StorageMapHandle {
   }
 
   async delete(key) {
-    if (!(await isNativeServerAvailable())) {
-      const blob = readLocalStorageBlob(this._mapId)
-      delete blob[key]
-      writeLocalStorageBlob(this._mapId, blob)
-      return
-    }
-
     try {
       const response = await fetch(`/storage/maps/${this._mapId}/${key}`, { method: 'DELETE' })
       if (!response.ok) {

@@ -80,3 +80,23 @@ TEST_CASE("resolveConfig --data-dir takes precedence over NATIVE_SERVER_DATA_DIR
       native_server_cli::resolveConfig({"--dir", "/tmp", "--data-dir", "/other/data"}, env);
   REQUIRE(config.dataDir == "/other/data");
 }
+
+TEST_CASE("resolveConfig defaults sharedDataDir to shared_data", "[config]") {
+  auto env = makeEnv({});
+  auto config = native_server_cli::resolveConfig({"--dir", "/tmp"}, env);
+  REQUIRE(config.sharedDataDir == "shared_data");
+}
+
+TEST_CASE("resolveConfig reads sharedDataDir from NATIVE_SERVER_SHARED_DATA_DIR", "[config]") {
+  auto env = makeEnv({{"NATIVE_SERVER_SHARED_DATA_DIR", "/srv/shared"}});
+  auto config = native_server_cli::resolveConfig({"--dir", "/tmp"}, env);
+  REQUIRE(config.sharedDataDir == "/srv/shared");
+}
+
+TEST_CASE("resolveConfig --shared-data-dir takes precedence over NATIVE_SERVER_SHARED_DATA_DIR",
+          "[config]") {
+  auto env = makeEnv({{"NATIVE_SERVER_SHARED_DATA_DIR", "/srv/shared"}});
+  auto config = native_server_cli::resolveConfig(
+      {"--dir", "/tmp", "--shared-data-dir", "/other/shared"}, env);
+  REQUIRE(config.sharedDataDir == "/other/shared");
+}

@@ -56,8 +56,8 @@ not needed in practice, dropped to keep the tool simple.
     recording, playback all happen in-browser via standard Web APIs)
   - Must be served over **HTTPS** (required for `getUserMedia`/mic access —
     won't work over plain HTTP)
-  - **Hosting: GitHub Pages** — free static hosting, HTTPS by default, works
-    from anywhere with signal, no server maintenance
+  - **Hosting:** served locally by native-server (`native_server_cli`, or
+    embedded in the Mac/iOS app) rather than published anywhere public
   - Add "Add to Home Screen" support so it behaves like a standalone app
     (full-screen, own icon, no Safari chrome) — done, with a generated icon
     set and manifest

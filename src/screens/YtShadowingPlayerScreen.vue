@@ -11,7 +11,7 @@
 
       <p v-if="state.error" class="error-message">{{ state.error }}</p>
 
-      <div class="player-and-transcript">
+      <div class="player-and-transcript" v-if="!wordLoopMode">
       <div class="video-column">
         <div class="video-frame">
           <div class="yt-player-wrap">
@@ -301,6 +301,14 @@
                 </span>
                 <span>HF²</span>
               </button>
+
+              <button
+                class="hf-button"
+                :disabled="handFreeModeEnabled || handFreeShadowModeEnabled || handFreeShadowDoubleModeEnabled || handFreeRecordDoubleModeEnabled"
+                @click="startWordLoop"
+              >
+                <span>Loop (words)</span>
+              </button>
             </div>
           </div>
         </div>
@@ -346,6 +354,26 @@
         </button>
       </div>
     </div>
+
+    <div class="word-loop-mode" v-else>
+      <button class="back-button" @click="exitWordLoop">&larr; Back to YT Shadowing</button>
+
+      <p v-if="wordLoopStatus === 'loading'" class="subtitle">Checking transcript vocabulary…</p>
+      <p v-else-if="wordLoopStatus === 'empty'" class="subtitle">
+        No words with cached US audio were found in this video's transcript yet.
+      </p>
+      <ShadowLoopPanel
+        v-else-if="wordLoopStatus === 'ready'"
+        :items="wordLoopItems"
+        :speak="speakWordLoopItem"
+      >
+        <template #current-item="{ item }">
+          <span class="clickable-word loop-word-display" @click="handleWordClick(item.word, $event)">
+            {{ item.word }}
+          </span>
+        </template>
+      </ShadowLoopPanel>
+    </div>
     </div>
 
     <!-- Mounted as a sibling of .screen-content, not inside it - that div
@@ -388,9 +416,10 @@ import {
   YtShadowingEngine,
 } from '../engine/ytShadowingEngine.js'
 import { addToHistory, loadHistory, sendHistoryBeacon } from '../engine/ytHistory.js'
-import { fetchSubtitles, isNativeServerAvailable } from '../engine/nativeServerClient.js'
+import { fetchSubtitles, fetchUsAudioWords } from '../engine/nativeServerClient.js'
 import { openReferenceSite } from '../engine/externalDictionarySites.js'
 import { cleanWord, isClickableWord, splitIntoWords } from '../engine/wordTokenizer.js'
+import { playWordPronunciationTimed } from '../engine/wordAudioPlayer.js'
 import { log } from '../engine/appLog.js'
 import { useRecordShadow } from '../composables/useRecordShadow.js'
 import { useShiftOrLongPress } from '../composables/useShiftOrLongPress.js'
@@ -398,6 +427,7 @@ import { MicRecorderEngine } from '../engine/micRecorderEngine.js'
 import RecordShadowButtons from '../components/RecordShadowButtons.vue'
 import PlayPauseIcon from '../components/PlayPauseIcon.vue'
 import AddToPlaylistPopup from '../components/AddToPlaylistPopup.vue'
+import ShadowLoopPanel from '../components/ShadowLoopPanel.vue'
 
 const props = defineProps({
   videoId: { type: String, required: true },
@@ -506,8 +536,63 @@ async function ensureSubtitlesFetched() {
   if (subtitlesFetchAttempted) return
   subtitlesFetchAttempted = true
   subtitlesLoading.value = true
-  await loadSubtitlesIfAvailable()
+  await loadSubtitles()
   subtitlesLoading.value = false
+}
+
+// ShadowLoopMode over this video's transcript vocabulary - see
+// docs/shadow-loop-mode-spec.md. Fully replaces the player view while
+// active (video paused, hidden) - "Back to YT Shadowing" returns to it,
+// exactly like Flashcards' own Loop/Exit toggle.
+const wordLoopMode = ref(false)
+const wordLoopStatus = ref('idle') // idle | loading | ready | empty
+const wordLoopItems = ref([])
+
+// Every clickable word across every transcript cue, cleaned and lowercased
+// the same way a transcript word click already is, deduped via a Set -
+// reuses the exact tokenization already proven for the clickable-transcript
+// rendering below, rather than inventing new rules.
+function extractUniqueTranscriptWords(cues) {
+  const words = new Set()
+  for (const cue of cues) {
+    for (const token of splitIntoWords(cue.text)) {
+      if (!isClickableWord(token)) continue
+      const cleaned = cleanWord(token)
+      if (cleaned) words.add(cleaned.toLowerCase())
+    }
+  }
+  return Array.from(words)
+}
+
+async function startWordLoop() {
+  if (state.isPlaying) engine.pause()
+  wordLoopMode.value = true
+  wordLoopStatus.value = 'loading'
+  wordLoopItems.value = []
+
+  await ensureSubtitlesFetched()
+  const uniqueWords = extractUniqueTranscriptWords(subtitleCues.value)
+  const matched = uniqueWords.length > 0 ? await fetchUsAudioWords(uniqueWords) : []
+
+  if (matched.length === 0) {
+    wordLoopStatus.value = 'empty'
+    return
+  }
+  wordLoopItems.value = matched.map((word) => ({ word }))
+  wordLoopStatus.value = 'ready'
+}
+
+// No manual engine stop needed here - unmounting ShadowLoopPanel (v-if
+// below) already stops/cleans up any active run, same as Flashcards' own
+// Loop/Exit toggle (see ShadowLoopPanel.vue's own doc comment).
+function exitWordLoop() {
+  wordLoopMode.value = false
+  wordLoopStatus.value = 'idle'
+  wordLoopItems.value = []
+}
+
+async function speakWordLoopItem(item) {
+  return await playWordPronunciationTimed(item.word)
 }
 
 async function toggleSubtitles() {
@@ -705,11 +790,7 @@ function handleWordClick(token, event) {
   emit('show-word', cleaned)
 }
 
-async function loadSubtitlesIfAvailable() {
-  if (!(await isNativeServerAvailable())) {
-    log('[YT Shadowing] native-server not available, skipping subtitles')
-    return
-  }
+async function loadSubtitles() {
   const data = await fetchSubtitles(props.url, 'en')
   if (data) {
     subtitleCues.value = data.cues
@@ -1692,6 +1773,19 @@ function handleBack() {
     align-items: flex-start;
     justify-content: center;
   }
+}
+
+.word-loop-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.loop-word-display {
+  font-size: 1.6rem;
+  font-weight: 600;
 }
 
 .video-column {
